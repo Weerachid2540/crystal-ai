@@ -258,6 +258,30 @@
     .logo-icon-wrap { width: 34px; height: 34px; }
   }
 
+  /* REPORT TABLES (Weekly / Monthly structured data) */
+  .report-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: 6px; }
+  .report-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; }
+  .report-table thead { background: var(--surface2); }
+  .report-table th { padding: 8px 6px; text-align: left; font-weight: 600; color: var(--text2); font-family: var(--mono); font-size: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .report-table td { padding: 4px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .report-table tbody tr:last-child td { border-bottom: none; }
+  .report-table tbody tr:hover { background: rgba(232,168,56,0.04); }
+  .report-table input, .report-table select, .report-table textarea { width: 100%; background: transparent; border: 1px solid transparent; color: var(--text); padding: 4px 6px; font-size: 12px; font-family: var(--font); border-radius: 4px; }
+  .report-table input:focus, .report-table select:focus, .report-table textarea:focus { background: var(--surface); border-color: var(--accent); outline: none; }
+  .report-table textarea { resize: vertical; min-height: 28px; }
+  .report-table .col-num { width: 36px; color: var(--text3); font-family: var(--mono); text-align: center; padding: 8px 4px; }
+  .report-table .col-act { width: 36px; }
+  .report-table .col-grid, .report-table .col-mhr, .report-table .col-status, .report-table .col-due, .report-table .col-action { width: 110px; }
+  .report-table .col-status select { font-family: var(--mono); font-size: 11px; }
+  .report-table tbody tr[data-status="Done"] td { background: rgba(63,185,80,0.05); }
+  .report-table tbody tr[data-status="Delayed"] td { background: rgba(248,81,73,0.05); }
+  .report-table tbody tr[data-status="In Progress"] td { background: rgba(88,166,255,0.04); }
+  .report-table .del-row-btn { width: 24px; height: 24px; border-radius: 4px; background: transparent; border: 1px solid var(--border); color: var(--text3); cursor: pointer; font-size: 14px; padding: 0; }
+  .report-table .del-row-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+  .report-table-empty { padding: 14px; text-align: center; color: var(--text3); font-size: 12px; font-style: italic; }
+  .add-row-btn { background: var(--surface2); border: 1px dashed var(--border); color: var(--text2); padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 8px; transition: all 0.15s; }
+  .add-row-btn:hover { border-color: var(--accent); color: var(--accent); border-style: solid; }
+
   /* PHOTO UPLOAD (Daily Report attachments, max 20) */
   .photo-uploader { border: 2px dashed var(--border); border-radius: var(--radius); padding: 16px; text-align: center; cursor: pointer; transition: all 0.15s; background: rgba(232,168,56,0.03); }
   .photo-uploader:hover { border-color: var(--accent); background: rgba(232,168,56,0.06); }
@@ -287,7 +311,13 @@
     .quick-btns, .modal-overlay, .toast-container, .save-indicator, .statusbar,
     .menu-btn, .lang-switch, .mode-tag, .icon-btn, .send-btn, .gen-btn, .ghost-btn,
     .add-row-btn, .clear-all-btn, .del-row-btn, .result-toolbar, .field-error,
-    .doc-type-grid, .boq-actions, .photo-uploader, .photo-thumb-del { display: none !important; }
+    .doc-type-grid, .boq-actions, .photo-uploader, .photo-thumb-del,
+    .add-row-btn, .report-table .col-action, .report-table .del-row-btn { display: none !important; }
+    .report-table-wrap { overflow: visible !important; border: 1px solid #888; }
+    .report-table { font-size: 10px; min-width: 0; }
+    .report-table th, .report-table td { color: black; border: 1px solid #999; padding: 3px 4px; }
+    .report-table input, .report-table select, .report-table textarea { color: black; border: none; padding: 0; background: transparent; }
+    .report-table thead { background: #f0f0f0; }
     .photo-grid { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .photo-thumb { cursor: default; aspect-ratio: 4/3; border: 1px solid #999; }
     .photo-thumb-num { background: rgba(0,0,0,0.6); }
@@ -446,20 +476,88 @@
       <div class="form-panel">
         <div><div class="panel-title" data-i18n="weekly_title">📅 รีพอตรายสัปดาห์</div><div class="panel-desc" data-i18n="weekly_desc">สรุปความคืบหน้าและผลงานรายสัปดาห์</div></div>
         <div class="section-card">
-          <div class="section-card-title" data-i18n="basic_info">ข้อมูลพื้นฐาน</div>
+          <div class="section-card-title" data-i18n="report_info">📋 ข้อมูลรายงาน / Report Info</div>
           <div class="form-grid">
-            <div class="field"><label data-i18n="lbl_project">ชื่อโปรเจกต์<span class="req">*</span></label><input id="wk_proj" data-required/><div class="field-error" data-i18n="err_required">กรุณากรอกข้อมูล</div></div>
-            <div class="field"><label data-i18n="lbl_week">สัปดาห์ที่ / ช่วงวันที่</label><input id="wk_week" placeholder="เช่น สัปดาห์ที่ 12 / 1-7 พ.ค. 68"/></div>
-            <div class="field"><label data-i18n="lbl_plan_pct">แผนงานสัปดาห์นี้ (%)</label><input id="wk_plan_pct" type="number" min="0" max="100"/></div>
-            <div class="field"><label data-i18n="lbl_actual_pct">ผลงานจริง (%)</label><input id="wk_actual_pct" type="number" min="0" max="100"/></div>
+            <div class="field"><label data-i18n="lbl_report_no">Report No.</label><input id="wk_no" placeholder="J329-W-005"/></div>
+            <div class="field"><label data-i18n="lbl_dept">Department</label><input id="wk_dept" value="Civil Department"/></div>
+            <div class="field"><label data-i18n="lbl_worktype">Work Type</label>
+              <select id="wk_worktype">
+                <option>Consultant</option>
+                <option>EPC TURNKEY</option>
+                <option>PRIVILEGE SERVICE</option>
+                <option>Site Supervision</option>
+              </select>
+            </div>
+            <div class="field"><label data-i18n="lbl_workdesc">Work Description</label><input id="wk_workdesc" placeholder="เช่น Control work for Renovate Building"/></div>
           </div>
         </div>
         <div class="section-card">
-          <div class="section-card-title" data-i18n="progress">ความคืบหน้า</div>
+          <div class="section-card-title" data-i18n="basic_info">ข้อมูลพื้นฐาน</div>
+          <div class="form-grid">
+            <div class="field"><label data-i18n="lbl_proj_code">Project Code</label><input id="wk_proj_code" placeholder="J-329"/></div>
+            <div class="field"><label data-i18n="lbl_project">ชื่อโปรเจกต์<span class="req">*</span></label><input id="wk_proj" data-required/><div class="field-error" data-i18n="err_required">กรุณากรอกข้อมูล</div></div>
+            <div class="field"><label data-i18n="lbl_period_from">Period from</label><input id="wk_from" type="date"/></div>
+            <div class="field"><label data-i18n="lbl_period_to">Period to</label><input id="wk_to" type="date"/></div>
+            <div class="field"><label data-i18n="lbl_reporter">Reported by</label><input id="wk_reporter" placeholder="เช่น Weerachid Kongduang"/></div>
+            <div class="field"><label data-i18n="lbl_approver">Approved by</label><input id="wk_approver" placeholder="เช่น CE. Thachpisut Pongsuttipanich"/></div>
+            <div class="field"><label data-i18n="lbl_plan_pct">Plan สัปดาห์นี้ (%)</label><input id="wk_plan_pct" type="number" min="0" max="100" step="0.01"/></div>
+            <div class="field"><label data-i18n="lbl_actual_pct">Actual (%)</label><input id="wk_actual_pct" type="number" min="0" max="100" step="0.01"/></div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="sec1_week">1. งานสัปดาห์นี้ / This Week Activities</div>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead><tr>
+                <th class="col-num">#</th>
+                <th data-i18n="th_desc">รายการงาน / Description</th>
+                <th class="col-grid">Gridline</th>
+                <th class="col-mhr">Plan (Mhr)</th>
+                <th class="col-status">Status</th>
+                <th>Remark</th>
+                <th class="col-action"></th>
+              </tr></thead>
+              <tbody id="wkActBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="add-row-btn" onclick="addWkActRow()" data-i18n="btn_add_row">+ เพิ่มแถว</button>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="sec2_issues">2. ปัญหาและประเด็นสำคัญ / Major Issues</div>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead><tr>
+                <th class="col-num">#</th>
+                <th data-i18n="th_issue">ปัญหา / Issue</th>
+                <th class="col-status">Action By</th>
+                <th class="col-due">Due Date</th>
+                <th class="col-action"></th>
+              </tr></thead>
+              <tbody id="wkIssueBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="add-row-btn" onclick="addWkIssueRow()" data-i18n="btn_add_row">+ เพิ่มแถว</button>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="sec3_next_week">3. แผนงานสัปดาห์หน้า / Next Week Activities</div>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead><tr>
+                <th class="col-num">#</th>
+                <th data-i18n="th_desc">รายการงาน / Description</th>
+                <th class="col-grid">Gridline</th>
+                <th class="col-mhr">Plan (Mhr)</th>
+                <th class="col-action"></th>
+              </tr></thead>
+              <tbody id="wkNextBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="add-row-btn" onclick="addWkNextRow()" data-i18n="btn_add_row">+ เพิ่มแถว</button>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="sec4_targets">4. เป้าหมายสำคัญ / Current Important Targets</div>
           <div class="form-grid full">
-            <div class="field"><label data-i18n="lbl_done_week">งานที่ทำเสร็จสัปดาห์นี้<span class="req">*</span></label><textarea id="wk_done" data-required></textarea><div class="field-error" data-i18n="err_required">กรุณากรอกข้อมูล</div></div>
-            <div class="field"><label data-i18n="lbl_problem">ปัญหาและการแก้ไข</label><textarea id="wk_problem"></textarea></div>
-            <div class="field"><label data-i18n="lbl_plan_next_w">แผนสัปดาห์หน้า</label><textarea id="wk_next"></textarea></div>
+            <div class="field"><textarea id="wk_targets" placeholder="ระบุเป้าหมายหลักของโครงการที่ต้องเร่งให้เสร็จ..."></textarea></div>
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -484,20 +582,89 @@
       <div class="form-panel">
         <div><div class="panel-title" data-i18n="monthly_title">📊 รีพอตรายเดือน</div><div class="panel-desc" data-i18n="monthly_desc">สรุปภาพรวมโครงการประจำเดือน</div></div>
         <div class="section-card">
-          <div class="section-card-title" data-i18n="basic_info">ข้อมูลพื้นฐาน</div>
+          <div class="section-card-title" data-i18n="report_info">📋 ข้อมูลรายงาน / Report Info</div>
           <div class="form-grid">
-            <div class="field"><label data-i18n="lbl_project">ชื่อโปรเจกต์<span class="req">*</span></label><input id="mo_proj" data-required/><div class="field-error" data-i18n="err_required">กรุณากรอกข้อมูล</div></div>
-            <div class="field"><label data-i18n="lbl_month">เดือน / ปี</label><input id="mo_month" placeholder="เช่น พฤษภาคม 2568"/></div>
-            <div class="field"><label data-i18n="lbl_plan_cum">แผนงานสะสม (%)</label><input id="mo_plan" type="number" min="0" max="100"/></div>
-            <div class="field"><label data-i18n="lbl_actual_cum">ผลงานสะสม (%)</label><input id="mo_actual" type="number" min="0" max="100"/></div>
+            <div class="field"><label data-i18n="lbl_report_no">Report No.</label><input id="mo_no" placeholder="J329-M-001"/></div>
+            <div class="field"><label data-i18n="lbl_dept">Department</label><input id="mo_dept" value="Civil Department"/></div>
+            <div class="field"><label data-i18n="lbl_worktype">Work Type</label>
+              <select id="mo_worktype">
+                <option>Consultant</option>
+                <option>EPC TURNKEY</option>
+                <option>PRIVILEGE SERVICE</option>
+                <option>Site Supervision</option>
+              </select>
+            </div>
+            <div class="field"><label data-i18n="lbl_workdesc">Work Description</label><input id="mo_workdesc" placeholder="เช่น Control work for Renovate Building"/></div>
           </div>
         </div>
         <div class="section-card">
-          <div class="section-card-title" data-i18n="summary">สรุปผลงาน</div>
+          <div class="section-card-title" data-i18n="basic_info">ข้อมูลพื้นฐาน</div>
+          <div class="form-grid">
+            <div class="field"><label data-i18n="lbl_proj_code">Project Code</label><input id="mo_proj_code" placeholder="J-329"/></div>
+            <div class="field"><label data-i18n="lbl_project">ชื่อโปรเจกต์<span class="req">*</span></label><input id="mo_proj" data-required/><div class="field-error" data-i18n="err_required">กรุณากรอกข้อมูล</div></div>
+            <div class="field"><label data-i18n="lbl_period_from">Period from</label><input id="mo_from" type="date"/></div>
+            <div class="field"><label data-i18n="lbl_period_to">Period to</label><input id="mo_to" type="date"/></div>
+            <div class="field"><label data-i18n="lbl_reporter">Reported by</label><input id="mo_reporter" placeholder="เช่น Weerachid Kongduang"/></div>
+            <div class="field"><label data-i18n="lbl_approver">Approved by</label><input id="mo_approver" placeholder="เช่น CE. Thachpisut Pongsuttipanich"/></div>
+            <div class="field"><label data-i18n="lbl_plan_cum">Plan สะสม (%)</label><input id="mo_plan" type="number" min="0" max="100" step="0.01"/></div>
+            <div class="field"><label data-i18n="lbl_actual_cum">Actual สะสม (%)</label><input id="mo_actual" type="number" min="0" max="100" step="0.01"/></div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="sec1_month">1. งานเดือนนี้ / This Month Activities</div>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead><tr>
+                <th class="col-num">#</th>
+                <th data-i18n="th_desc">รายการงาน / Description</th>
+                <th class="col-grid">Gridline</th>
+                <th class="col-mhr">Plan (Mhr)</th>
+                <th class="col-mhr">Used (Mhr)</th>
+                <th class="col-status">Status</th>
+                <th>Remark</th>
+                <th class="col-action"></th>
+              </tr></thead>
+              <tbody id="moActBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="add-row-btn" onclick="addMoActRow()" data-i18n="btn_add_row">+ เพิ่มแถว</button>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="sec2_issues">2. ปัญหาและประเด็นสำคัญ / Major Issues</div>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead><tr>
+                <th class="col-num">#</th>
+                <th data-i18n="th_issue">ปัญหา / Issue</th>
+                <th class="col-status">Action By</th>
+                <th class="col-due">Due Date</th>
+                <th class="col-action"></th>
+              </tr></thead>
+              <tbody id="moIssueBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="add-row-btn" onclick="addMoIssueRow()" data-i18n="btn_add_row">+ เพิ่มแถว</button>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="sec3_next_month">3. แผนงานเดือนหน้า / Next Month Activities</div>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead><tr>
+                <th class="col-num">#</th>
+                <th data-i18n="th_desc">รายการงาน / Description</th>
+                <th class="col-grid">Gridline</th>
+                <th class="col-mhr">Plan (Mhr)</th>
+                <th class="col-action"></th>
+              </tr></thead>
+              <tbody id="moNextBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="add-row-btn" onclick="addMoNextRow()" data-i18n="btn_add_row">+ เพิ่มแถว</button>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="sec4_targets">4. เป้าหมายสำคัญ / Current Important Targets</div>
           <div class="form-grid full">
-            <div class="field"><label data-i18n="lbl_done_month">งานหลักที่ทำเสร็จเดือนนี้<span class="req">*</span></label><textarea id="mo_done" data-required></textarea><div class="field-error" data-i18n="err_required">กรุณากรอกข้อมูล</div></div>
-            <div class="field"><label data-i18n="lbl_issue_main">ปัญหาสำคัญและการแก้ไข</label><textarea id="mo_issue"></textarea></div>
-            <div class="field"><label data-i18n="lbl_plan_next_m">แผนเดือนหน้า</label><textarea id="mo_plan_next"></textarea></div>
+            <div class="field"><textarea id="mo_targets" placeholder="ระบุเป้าหมายหลักของโครงการที่ต้องเร่งให้เสร็จ..."></textarea></div>
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -711,6 +878,13 @@ const I18N = {
     basic_info: 'ข้อมูลพื้นฐาน / Basic Info', work_today: 'งานที่ดำเนินการวันนี้',
     issue_plan: 'ปัญหา & Plan', progress: 'Progress', summary: 'สรุปผลงาน',
     photos_title: '📸 รูปภาพหน้างาน', photos_upload: 'คลิกหรือลากรูปมาวางที่นี่', photos_hint: 'JPG / PNG / WebP — สูงสุด 20 รูป',
+    report_info: '📋 ข้อมูล Report', lbl_report_no: 'Report No.', lbl_dept: 'Department', lbl_worktype: 'Work Type',
+    lbl_workdesc: 'Work Description', lbl_proj_code: 'Project Code', lbl_period_from: 'Period from', lbl_period_to: 'Period to',
+    lbl_approver: 'Approved by',
+    sec1_week: '1. งาน Week นี้ / This Week Activities', sec1_month: '1. งานเดือนนี้ / This Month Activities',
+    sec2_issues: '2. ปัญหาและ Issue สำคัญ', sec3_next_week: '3. Plan สัปดาห์หน้า / Next Week',
+    sec3_next_month: '3. Plan เดือนหน้า / Next Month', sec4_targets: '4. เป้าหมายสำคัญ / Important Targets',
+    th_desc: 'รายการงาน / Description', th_issue: 'ปัญหา / Issue', btn_add_row: '+ เพิ่มแถว',
     doc_type: 'ประเภทเอกสาร', doc_info: 'ข้อมูลเอกสาร', material_list: 'รายการวัสดุ / งาน',
     vo_info: 'ข้อมูล VO', detail: 'รายละเอียด',
     lbl_project: 'ชื่อ Project', lbl_date: 'วันที่', lbl_reporter: 'ผู้รายงาน', lbl_weather: 'สภาพอากาศ',
@@ -766,6 +940,13 @@ const I18N = {
     basic_info: 'ข้อมูลพื้นฐาน', work_today: 'งานที่ดำเนินการวันนี้',
     issue_plan: 'ปัญหาและแผนงาน', progress: 'ความคืบหน้า', summary: 'สรุปผลงาน',
     photos_title: '📸 รูปภาพหน้างาน', photos_upload: 'คลิกหรือลากรูปมาวางที่นี่', photos_hint: 'JPG / PNG / WebP — สูงสุด 20 รูป',
+    report_info: '📋 ข้อมูลรายงาน', lbl_report_no: 'เลขที่รายงาน', lbl_dept: 'แผนก', lbl_worktype: 'ประเภทงาน',
+    lbl_workdesc: 'รายละเอียดงาน', lbl_proj_code: 'รหัสโครงการ', lbl_period_from: 'ตั้งแต่วันที่', lbl_period_to: 'ถึงวันที่',
+    lbl_approver: 'ผู้อนุมัติ',
+    sec1_week: '1. งานที่ทำสัปดาห์นี้', sec1_month: '1. งานที่ทำเดือนนี้',
+    sec2_issues: '2. ปัญหาและประเด็นสำคัญ', sec3_next_week: '3. แผนงานสัปดาห์หน้า',
+    sec3_next_month: '3. แผนงานเดือนหน้า', sec4_targets: '4. เป้าหมายสำคัญที่ต้องเร่ง',
+    th_desc: 'รายการงาน', th_issue: 'รายละเอียดปัญหา', btn_add_row: '+ เพิ่มแถว',
     doc_type: 'ประเภทเอกสาร', doc_info: 'ข้อมูลเอกสาร', material_list: 'รายการวัสดุ / งาน',
     vo_info: 'ข้อมูลคำสั่งเปลี่ยนแปลง', detail: 'รายละเอียด',
     lbl_project: 'ชื่อโครงการ', lbl_date: 'วันที่', lbl_reporter: 'ผู้รายงาน', lbl_weather: 'สภาพอากาศ',
@@ -821,6 +1002,13 @@ const I18N = {
     basic_info: 'Basic Information', work_today: "Today's Work",
     issue_plan: 'Issues & Plan', progress: 'Progress', summary: 'Summary',
     photos_title: '📸 Site Photos', photos_upload: 'Click or drag photos here', photos_hint: 'JPG / PNG / WebP — up to 20 photos',
+    report_info: '📋 Report Info', lbl_report_no: 'Report No.', lbl_dept: 'Department', lbl_worktype: 'Work Type',
+    lbl_workdesc: 'Work Description', lbl_proj_code: 'Project Code', lbl_period_from: 'Period from', lbl_period_to: 'Period to',
+    lbl_approver: 'Approved by',
+    sec1_week: '1. This Week Activities', sec1_month: '1. This Month Activities',
+    sec2_issues: '2. Major Issues & Outstanding', sec3_next_week: '3. Next Week Activities',
+    sec3_next_month: '3. Next Month Activities', sec4_targets: '4. Current Important Targets',
+    th_desc: 'Description', th_issue: 'Issue', btn_add_row: '+ Add Row',
     doc_type: 'Document Type', doc_info: 'Document Info', material_list: 'Materials / Work Items',
     vo_info: 'VO Information', detail: 'Details',
     lbl_project: 'Project Name', lbl_date: 'Date', lbl_reporter: 'Reporter', lbl_weather: 'Weather',
@@ -1601,25 +1789,245 @@ function setupDailyPhotoDragDrop() {
   });
 }
 
+// ============================================================
+// WEEKLY / MONTHLY REPORT TABLES (based on real Crystal templates)
+// State arrays keyed by row id; rendered into <tbody> with per-cell inputs.
+// ============================================================
+let wkAct = [], wkIssue = [], wkNext = [];
+let moAct = [], moIssue = [], moNext = [];
+let reportRowIdCounter = 0;
+const STATUS_OPTIONS = ['', 'Done', 'In Progress', 'Delayed', 'Pending'];
+
+function _newId() { return ++reportRowIdCounter; }
+
+// Generic row helpers ----------------------------------------------------
+function _renderTable(state, tbodyId, columns, updateFn, delFn) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  if (!state.length) {
+    tbody.innerHTML = `<tr><td colspan="${columns.length + 2}" class="report-table-empty">${currentLang === 'en' ? 'No rows yet — click "+ Add row" below' : 'ยังไม่มีรายการ — คลิก "+ เพิ่มแถว" ด้านล่าง'}</td></tr>`;
+    return;
+  }
+  state.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.dataset.rowId = row.id;
+    if (row.status) tr.dataset.status = row.status;
+    let html = `<td class="col-num">${i + 1}</td>`;
+    columns.forEach(col => {
+      const v = row[col.key] || '';
+      const cls = col.class ? ` class="${col.class}"` : '';
+      if (col.type === 'select') {
+        const opts = col.options.map(o => `<option value="${o}" ${v === o ? 'selected' : ''}>${o || '—'}</option>`).join('');
+        html += `<td${cls}><select data-field="${col.key}">${opts}</select></td>`;
+      } else if (col.type === 'date') {
+        html += `<td${cls}><input type="date" data-field="${col.key}" value="${escapeHtml(v)}"></td>`;
+      } else if (col.type === 'number') {
+        html += `<td${cls}><input type="number" min="0" step="0.5" data-field="${col.key}" value="${escapeHtml(v)}" placeholder="${col.placeholder || ''}"></td>`;
+      } else {
+        html += `<td${cls}><input type="text" data-field="${col.key}" value="${escapeHtml(v)}" placeholder="${col.placeholder || ''}"></td>`;
+      }
+    });
+    html += `<td class="col-action"><button type="button" class="del-row-btn" title="ลบ" aria-label="Remove">×</button></td>`;
+    tr.innerHTML = html;
+    tr.querySelectorAll('[data-field]').forEach(el => {
+      el.addEventListener('input', e => updateFn(row.id, e.target.dataset.field, e.target.value));
+      el.addEventListener('change', e => updateFn(row.id, e.target.dataset.field, e.target.value));
+    });
+    tr.querySelector('.del-row-btn').addEventListener('click', () => delFn(row.id));
+    tbody.appendChild(tr);
+  });
+}
+
+function _updateRow(state, id, field, value, renderFn) {
+  const row = state.find(r => r.id === id);
+  if (!row) return;
+  row[field] = value;
+  if (field === 'status') {
+    const tr = document.querySelector(`tr[data-row-id="${id}"]`);
+    if (tr) { if (value) tr.dataset.status = value; else delete tr.dataset.status; }
+  }
+  // No re-render: keeps input focus stable
+}
+
+function _delRow(state, id, renderFn) {
+  const idx = state.findIndex(r => r.id === id);
+  if (idx === -1) return;
+  state.splice(idx, 1);
+  renderFn();
+}
+
+// Column definitions -----------------------------------------------------
+const ACT_COLS = [
+  { key: 'desc', type: 'text', placeholder: 'งาน...' },
+  { key: 'grid', type: 'text', placeholder: 'A-1', class: 'col-grid' },
+  { key: 'plan', type: 'number', placeholder: 'Mhr', class: 'col-mhr' },
+  { key: 'status', type: 'select', options: STATUS_OPTIONS, class: 'col-status' },
+  { key: 'remark', type: 'text', placeholder: '-' }
+];
+const ACT_COLS_M = [
+  { key: 'desc', type: 'text', placeholder: 'งาน...' },
+  { key: 'grid', type: 'text', placeholder: 'A-1', class: 'col-grid' },
+  { key: 'plan', type: 'number', placeholder: 'Plan', class: 'col-mhr' },
+  { key: 'used', type: 'number', placeholder: 'Used', class: 'col-mhr' },
+  { key: 'status', type: 'select', options: STATUS_OPTIONS, class: 'col-status' },
+  { key: 'remark', type: 'text', placeholder: '-' }
+];
+const ISSUE_COLS = [
+  { key: 'issue', type: 'text', placeholder: 'รายละเอียดปัญหา...' },
+  { key: 'actionBy', type: 'text', placeholder: 'ผู้รับผิดชอบ', class: 'col-status' },
+  { key: 'dueDate', type: 'date', class: 'col-due' }
+];
+const NEXT_COLS = [
+  { key: 'desc', type: 'text', placeholder: 'งาน...' },
+  { key: 'grid', type: 'text', placeholder: 'A-1', class: 'col-grid' },
+  { key: 'plan', type: 'number', placeholder: 'Mhr', class: 'col-mhr' }
+];
+
+// Weekly bindings --------------------------------------------------------
+function renderWkAct() { _renderTable(wkAct, 'wkActBody', ACT_COLS,
+  (id, f, v) => _updateRow(wkAct, id, f, v, renderWkAct),
+  id => _delRow(wkAct, id, renderWkAct)); saveReportTablesDraft('panel-weekly'); }
+function renderWkIssue() { _renderTable(wkIssue, 'wkIssueBody', ISSUE_COLS,
+  (id, f, v) => _updateRow(wkIssue, id, f, v, renderWkIssue),
+  id => _delRow(wkIssue, id, renderWkIssue)); saveReportTablesDraft('panel-weekly'); }
+function renderWkNext() { _renderTable(wkNext, 'wkNextBody', NEXT_COLS,
+  (id, f, v) => _updateRow(wkNext, id, f, v, renderWkNext),
+  id => _delRow(wkNext, id, renderWkNext)); saveReportTablesDraft('panel-weekly'); }
+
+function addWkActRow() { wkAct.push({ id: _newId(), desc: '', grid: '', plan: '', status: '', remark: '' }); renderWkAct(); }
+function addWkIssueRow() { wkIssue.push({ id: _newId(), issue: '', actionBy: '', dueDate: '' }); renderWkIssue(); }
+function addWkNextRow() { wkNext.push({ id: _newId(), desc: '', grid: '', plan: '' }); renderWkNext(); }
+
+// Monthly bindings -------------------------------------------------------
+function renderMoAct() { _renderTable(moAct, 'moActBody', ACT_COLS_M,
+  (id, f, v) => _updateRow(moAct, id, f, v, renderMoAct),
+  id => _delRow(moAct, id, renderMoAct)); saveReportTablesDraft('panel-monthly'); }
+function renderMoIssue() { _renderTable(moIssue, 'moIssueBody', ISSUE_COLS,
+  (id, f, v) => _updateRow(moIssue, id, f, v, renderMoIssue),
+  id => _delRow(moIssue, id, renderMoIssue)); saveReportTablesDraft('panel-monthly'); }
+function renderMoNext() { _renderTable(moNext, 'moNextBody', NEXT_COLS,
+  (id, f, v) => _updateRow(moNext, id, f, v, renderMoNext),
+  id => _delRow(moNext, id, renderMoNext)); saveReportTablesDraft('panel-monthly'); }
+
+function addMoActRow() { moAct.push({ id: _newId(), desc: '', grid: '', plan: '', used: '', status: '', remark: '' }); renderMoAct(); }
+function addMoIssueRow() { moIssue.push({ id: _newId(), issue: '', actionBy: '', dueDate: '' }); renderMoIssue(); }
+function addMoNextRow() { moNext.push({ id: _newId(), desc: '', grid: '', plan: '' }); renderMoNext(); }
+
+// Persist tables in localStorage (separate keys, larger than form drafts)
+function saveReportTablesDraft(panelId) {
+  try {
+    if (panelId === 'panel-weekly') {
+      localStorage.setItem('crystal_wk_tables', JSON.stringify({ act: wkAct, issue: wkIssue, next: wkNext }));
+    } else if (panelId === 'panel-monthly') {
+      localStorage.setItem('crystal_mo_tables', JSON.stringify({ act: moAct, issue: moIssue, next: moNext }));
+    }
+  } catch (e) {}
+}
+
+function loadReportTables() {
+  const wk = safeJsonParse(localStorage.getItem('crystal_wk_tables'), null);
+  if (wk) {
+    wkAct = wk.act || []; wkIssue = wk.issue || []; wkNext = wk.next || [];
+    [...wkAct, ...wkIssue, ...wkNext].forEach(r => { if (r.id > reportRowIdCounter) reportRowIdCounter = r.id; });
+  }
+  const mo = safeJsonParse(localStorage.getItem('crystal_mo_tables'), null);
+  if (mo) {
+    moAct = mo.act || []; moIssue = mo.issue || []; moNext = mo.next || [];
+    [...moAct, ...moIssue, ...moNext].forEach(r => { if (r.id > reportRowIdCounter) reportRowIdCounter = r.id; });
+  }
+  renderWkAct(); renderWkIssue(); renderWkNext();
+  renderMoAct(); renderMoIssue(); renderMoNext();
+}
+
+// Format table data into prompt-friendly text ----------------------------
+function _formatActRows(rows, withUsed) {
+  if (!rows.length) return '(none)';
+  return rows.map((r, i) => {
+    const parts = [`${i + 1}. ${r.desc || '-'}`];
+    if (r.grid) parts.push(`Grid: ${r.grid}`);
+    if (r.plan) parts.push(`Plan: ${r.plan} Mhr`);
+    if (withUsed && r.used) parts.push(`Used: ${r.used} Mhr`);
+    if (r.status) parts.push(`Status: ${r.status}`);
+    if (r.remark) parts.push(`Remark: ${r.remark}`);
+    return parts.join(' | ');
+  }).join('\n');
+}
+function _formatIssueRows(rows) {
+  if (!rows.length) return '(none)';
+  return rows.map((r, i) => `${i + 1}. ${r.issue || '-'} | Action: ${r.actionBy || '-'} | Due: ${r.dueDate || '-'}`).join('\n');
+}
+function _formatNextRows(rows) {
+  if (!rows.length) return '(none)';
+  return rows.map((r, i) => {
+    const parts = [`${i + 1}. ${r.desc || '-'}`];
+    if (r.grid) parts.push(`Grid: ${r.grid}`);
+    if (r.plan) parts.push(`Plan: ${r.plan} Mhr`);
+    return parts.join(' | ');
+  }).join('\n');
+}
+
 function generateWeeklyReport() {
-  const prompt = `${currentLang === 'en' ? 'Generate a formal weekly construction report' : 'สร้างรายงานก่อสร้างรายสัปดาห์'}:
-Project: ${val('wk_proj') || '-'} | ${val('wk_week') || ''}
-Plan: ${val('wk_plan_pct') || 0}% | Actual: ${val('wk_actual_pct') || 0}%
-Done: ${val('wk_done') || '-'}
-Problems: ${val('wk_problem') || '-'}
-Next Week Plan: ${val('wk_next') || '-'}
-Include Variance analysis (Plan vs Actual).`;
+  const lang = currentLang === 'en' ? 'English' : 'Thai';
+  const prompt = `Generate a formal Weekly Construction Site Report in ${lang}, formatted to match Crystal Engineering's standard template.
+
+[REPORT HEADER]
+Report No.: ${val('wk_no') || '-'}
+Project Code: ${val('wk_proj_code') || '-'}
+Project Name: ${val('wk_proj') || '-'}
+Department: ${val('wk_dept') || '-'}
+Work Type: ${val('wk_worktype') || '-'}
+Work Description: ${val('wk_workdesc') || '-'}
+Period: ${val('wk_from') || '-'} to ${val('wk_to') || '-'}
+Reported by: ${val('wk_reporter') || '-'}
+Approved by: ${val('wk_approver') || '-'}
+Plan: ${val('wk_plan_pct') || 0}% | Actual: ${val('wk_actual_pct') || 0}% | Variance: ${(parseFloat(val('wk_actual_pct'))||0) - (parseFloat(val('wk_plan_pct'))||0)}%
+
+[1. THIS WEEK ACTIVITIES]
+${_formatActRows(wkAct, false)}
+
+[2. MAJOR ISSUES & OUTSTANDING]
+${_formatIssueRows(wkIssue)}
+
+[3. NEXT WEEK ACTIVITIES]
+${_formatNextRows(wkNext)}
+
+[4. CURRENT IMPORTANT TARGETS]
+${val('wk_targets') || '-'}
+
+Output a clean formal report with: bolded section headings (1. This Week Activities, 2. Major Issues, 3. Next Week Activities, 4. Current Important Targets), bullet points or numbered lists where appropriate, brief variance analysis (Plan vs Actual), and a polite closing summary suitable for management review.`;
   runGenerator({ panelId: 'panel-weekly', loadId: 'loadingWeekly', btnId: 'genWeeklyBtn', areaId: 'resultWeekly', textId: 'resultWeeklyText', prompt });
 }
 
 function generateMonthlyReport() {
-  const prompt = `${currentLang === 'en' ? 'Generate a monthly construction report for management' : 'สร้างรายงานก่อสร้างรายเดือนสำหรับผู้บริหาร'}:
-Project: ${val('mo_proj') || '-'} | Month: ${val('mo_month') || ''}
-Cumulative Plan: ${val('mo_plan') || 0}% | Actual: ${val('mo_actual') || 0}%
-Completed: ${val('mo_done') || '-'}
-Major Issues: ${val('mo_issue') || '-'}
-Next Month Plan: ${val('mo_plan_next') || '-'}
-Include executive summary, variance analysis.`;
+  const lang = currentLang === 'en' ? 'English' : 'Thai';
+  const prompt = `Generate a formal Monthly Construction Site Report in ${lang}, formatted to match Crystal Engineering's standard template, suitable for executives.
+
+[REPORT HEADER]
+Report No.: ${val('mo_no') || '-'}
+Project Code: ${val('mo_proj_code') || '-'}
+Project Name: ${val('mo_proj') || '-'}
+Department: ${val('mo_dept') || '-'}
+Work Type: ${val('mo_worktype') || '-'}
+Work Description: ${val('mo_workdesc') || '-'}
+Period: ${val('mo_from') || '-'} to ${val('mo_to') || '-'}
+Reported by: ${val('mo_reporter') || '-'}
+Approved by: ${val('mo_approver') || '-'}
+Cumulative Plan: ${val('mo_plan') || 0}% | Actual: ${val('mo_actual') || 0}% | Variance: ${(parseFloat(val('mo_actual'))||0) - (parseFloat(val('mo_plan'))||0)}%
+
+[1. THIS MONTH ACTIVITIES]
+${_formatActRows(moAct, true)}
+
+[2. MAJOR ISSUES & OUTSTANDING]
+${_formatIssueRows(moIssue)}
+
+[3. NEXT MONTH ACTIVITIES]
+${_formatNextRows(moNext)}
+
+[4. CURRENT IMPORTANT TARGETS]
+${val('mo_targets') || '-'}
+
+Output a polished monthly report with: an Executive Summary at the top, bolded section headings, bullet points where useful, a Plan-vs-Actual variance analysis with brief commentary, and a concluding outlook for the next month.`;
   runGenerator({ panelId: 'panel-monthly', loadId: 'loadingMonthly', btnId: 'genMonthlyBtn', areaId: 'resultMonthly', textId: 'resultMonthlyText', prompt });
 }
 
@@ -1947,6 +2355,18 @@ function clearForm(panelId) {
   if (panelId === 'panel-report') {
     clearDailyPhotos();
   }
+  // Clear weekly tables
+  if (panelId === 'panel-weekly') {
+    wkAct = []; wkIssue = []; wkNext = [];
+    localStorage.removeItem('crystal_wk_tables');
+    renderWkAct(); renderWkIssue(); renderWkNext();
+  }
+  // Clear monthly tables
+  if (panelId === 'panel-monthly') {
+    moAct = []; moIssue = []; moNext = [];
+    localStorage.removeItem('crystal_mo_tables');
+    renderMoAct(); renderMoIssue(); renderMoNext();
+  }
   // Reset default date
   const today = localDate();
   ['rpt_date', 'boq_date', 'vo_date'].forEach(id => {
@@ -2119,6 +2539,7 @@ function init() {
   setupKeyboardShortcuts();
   setupDailyPhotoDragDrop();
   renderDailyPhotoGrid();
+  loadReportTables();
 
   updateModelTag();
   updateSettingsBtnStatus();
