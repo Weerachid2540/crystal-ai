@@ -258,6 +258,28 @@
     .logo-icon-wrap { width: 34px; height: 34px; }
   }
 
+  /* PHOTO UPLOAD (Daily Report attachments, max 20) */
+  .photo-uploader { border: 2px dashed var(--border); border-radius: var(--radius); padding: 16px; text-align: center; cursor: pointer; transition: all 0.15s; background: rgba(232,168,56,0.03); }
+  .photo-uploader:hover { border-color: var(--accent); background: rgba(232,168,56,0.06); }
+  .photo-uploader.dragover { border-color: var(--accent); background: rgba(232,168,56,0.12); }
+  .photo-uploader.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+  .photo-uploader-icon { font-size: 24px; margin-bottom: 4px; }
+  .photo-uploader-text { font-size: 12px; color: var(--text2); }
+  .photo-uploader-hint { font-size: 10px; color: var(--text3); margin-top: 2px; font-family: var(--mono); }
+  .photo-counter { display: inline-block; background: var(--tag-bg); border: 1px solid var(--border); color: var(--text2); font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+  .photo-counter.full { border-color: var(--red); color: var(--red); }
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 12px; }
+  .photo-grid:empty { display: none; }
+  .photo-thumb { position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb-num { position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.7); color: #fff; font-family: var(--mono); font-size: 10px; padding: 1px 5px; border-radius: 3px; }
+  .photo-thumb-del { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; background: rgba(248,81,73,0.9); border: none; color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; }
+  .photo-thumb-del:hover { background: var(--red); transform: scale(1.1); }
+  .photo-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
+  .photo-modal.show { display: flex; }
+  .photo-modal img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .photo-modal-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.15); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; }
+
   /* IMPROVED #22: Print stylesheet — ซ่อน UI chrome เหลือเฉพาะ result */
   @media print {
     body { background: white; color: black; height: auto; overflow: visible; }
@@ -265,7 +287,11 @@
     .quick-btns, .modal-overlay, .toast-container, .save-indicator, .statusbar,
     .menu-btn, .lang-switch, .mode-tag, .icon-btn, .send-btn, .gen-btn, .ghost-btn,
     .add-row-btn, .clear-all-btn, .del-row-btn, .result-toolbar, .field-error,
-    .doc-type-grid, .boq-actions { display: none !important; }
+    .doc-type-grid, .boq-actions, .photo-uploader, .photo-thumb-del { display: none !important; }
+    .photo-grid { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .photo-thumb { cursor: default; aspect-ratio: 4/3; border: 1px solid #999; }
+    .photo-thumb-num { background: rgba(0,0,0,0.6); }
+    .photo-counter { display: none !important; }
     .panel:not(.active) { display: none !important; }
     .panel.active { display: block !important; overflow: visible !important; }
     .form-panel { padding: 0; gap: 8px; overflow: visible !important; }
@@ -384,6 +410,19 @@
             <div class="field"><label data-i18n="lbl_issue">ปัญหา / อุปสรรค</label><textarea id="rpt_issue"></textarea></div>
             <div class="field"><label data-i18n="lbl_plan_tom">แผนงานพรุ่งนี้</label><textarea id="rpt_plan"></textarea></div>
           </div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title">
+            <span data-i18n="photos_title">📸 รูปภาพหน้างาน</span>
+            <span class="photo-counter" id="dailyPhotoCounter">0/20</span>
+          </div>
+          <div class="photo-uploader" id="dailyPhotoUploader" onclick="document.getElementById('dailyPhotoInput').click()">
+            <div class="photo-uploader-icon">📷</div>
+            <div class="photo-uploader-text" data-i18n="photos_upload">คลิกหรือลากรูปมาวางที่นี่</div>
+            <div class="photo-uploader-hint" data-i18n="photos_hint">JPG / PNG / WebP — สูงสุด 20 รูป</div>
+          </div>
+          <input type="file" id="dailyPhotoInput" accept="image/*" multiple style="display:none" onchange="handleDailyPhotoUpload(this)">
+          <div class="photo-grid" id="dailyPhotoGrid"></div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <button class="gen-btn" id="genDailyBtn" onclick="generateDailyReport()">✨ <span data-i18n="btn_generate">สร้างรีพอต</span></button>
@@ -614,6 +653,12 @@
 <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 <div class="save-indicator" id="saveIndicator">💾 saved</div>
 
+<!-- Photo preview modal (Daily Report attachments) -->
+<div class="photo-modal" id="photoModal" onclick="closePhotoPreview()" role="dialog" aria-label="Photo preview">
+  <button class="photo-modal-close" onclick="closePhotoPreview();event.stopPropagation()" aria-label="Close">×</button>
+  <img id="photoModalImg" src="" alt="">
+</div>
+
 <script>
 'use strict';
 
@@ -665,6 +710,7 @@ const I18N = {
     vo_desc: 'สร้างเอกสาร VO / Change Order สำหรับงานเพิ่ม-ลด',
     basic_info: 'ข้อมูลพื้นฐาน / Basic Info', work_today: 'งานที่ดำเนินการวันนี้',
     issue_plan: 'ปัญหา & Plan', progress: 'Progress', summary: 'สรุปผลงาน',
+    photos_title: '📸 รูปภาพหน้างาน', photos_upload: 'คลิกหรือลากรูปมาวางที่นี่', photos_hint: 'JPG / PNG / WebP — สูงสุด 20 รูป',
     doc_type: 'ประเภทเอกสาร', doc_info: 'ข้อมูลเอกสาร', material_list: 'รายการวัสดุ / งาน',
     vo_info: 'ข้อมูล VO', detail: 'รายละเอียด',
     lbl_project: 'ชื่อ Project', lbl_date: 'วันที่', lbl_reporter: 'ผู้รายงาน', lbl_weather: 'สภาพอากาศ',
@@ -719,6 +765,7 @@ const I18N = {
     vo_desc: 'สร้างเอกสารคำสั่งเปลี่ยนแปลงสำหรับงานเพิ่ม-ลด',
     basic_info: 'ข้อมูลพื้นฐาน', work_today: 'งานที่ดำเนินการวันนี้',
     issue_plan: 'ปัญหาและแผนงาน', progress: 'ความคืบหน้า', summary: 'สรุปผลงาน',
+    photos_title: '📸 รูปภาพหน้างาน', photos_upload: 'คลิกหรือลากรูปมาวางที่นี่', photos_hint: 'JPG / PNG / WebP — สูงสุด 20 รูป',
     doc_type: 'ประเภทเอกสาร', doc_info: 'ข้อมูลเอกสาร', material_list: 'รายการวัสดุ / งาน',
     vo_info: 'ข้อมูลคำสั่งเปลี่ยนแปลง', detail: 'รายละเอียด',
     lbl_project: 'ชื่อโครงการ', lbl_date: 'วันที่', lbl_reporter: 'ผู้รายงาน', lbl_weather: 'สภาพอากาศ',
@@ -773,6 +820,7 @@ const I18N = {
     vo_desc: 'Generate Variation Order / Change Order for additional or omitted work',
     basic_info: 'Basic Information', work_today: "Today's Work",
     issue_plan: 'Issues & Plan', progress: 'Progress', summary: 'Summary',
+    photos_title: '📸 Site Photos', photos_upload: 'Click or drag photos here', photos_hint: 'JPG / PNG / WebP — up to 20 photos',
     doc_type: 'Document Type', doc_info: 'Document Info', material_list: 'Materials / Work Items',
     vo_info: 'VO Information', detail: 'Details',
     lbl_project: 'Project Name', lbl_date: 'Date', lbl_reporter: 'Reporter', lbl_weather: 'Weather',
@@ -1405,15 +1453,152 @@ async function runGenerator({ panelId, loadId, btnId, areaId, textId, prompt }) 
 }
 
 function generateDailyReport() {
+  const photoNote = dailyImages.length > 0
+    ? `\nAttached Photos: ${dailyImages.length} ${currentLang === 'en' ? 'site photo(s)' : 'รูปประกอบหน้างาน'}`
+    : '';
   const prompt = `${currentLang === 'en' ? 'Generate a formal daily construction report' : 'สร้างรายงานก่อสร้างรายวันอย่างเป็นทางการ'}:
 Project: ${val('rpt_proj') || '-'} | Date: ${val('rpt_date')} | Reporter: ${val('rpt_name') || '-'} | Weather: ${val('rpt_weather')}
 Structural: ${val('rpt_str') || '-'}
 Architectural: ${val('rpt_arch') || '-'}
 MEP: ${val('rpt_mep') || '-'}
 Issues: ${val('rpt_issue') || '-'}
-Tomorrow Plan: ${val('rpt_plan') || '-'}
+Tomorrow Plan: ${val('rpt_plan') || '-'}${photoNote}
 Format with clear headings, suitable for management review.`;
   runGenerator({ panelId: 'panel-report', loadId: 'loadingDaily', btnId: 'genDailyBtn', areaId: 'resultDaily', textId: 'resultDailyText', prompt });
+}
+
+// ============================================================
+// DAILY REPORT PHOTO ATTACHMENTS (up to 20 images)
+// ============================================================
+const MAX_DAILY_IMAGES = 20;
+const PHOTO_MAX_DIM = 1280;       // resize longest side to 1280px
+const PHOTO_JPEG_QUALITY = 0.85;
+let dailyImages = [];             // [{ id, dataUrl, name }]
+let dailyPhotoIdCounter = 0;
+
+function compressImageFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) return reject(new Error('Not an image'));
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Read failed'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Decode failed'));
+      img.onload = () => {
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const maxDim = Math.max(w, h);
+        if (maxDim > PHOTO_MAX_DIM) {
+          const scale = PHOTO_MAX_DIM / maxDim;
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', PHOTO_JPEG_QUALITY));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleDailyPhotoUpload(input) {
+  const files = Array.from(input.files || []);
+  input.value = ''; // reset so same file can re-upload after delete
+  if (!files.length) return;
+  const available = MAX_DAILY_IMAGES - dailyImages.length;
+  if (available <= 0) {
+    toast(currentLang === 'en' ? `Max ${MAX_DAILY_IMAGES} photos reached` : `แนบรูปได้สูงสุด ${MAX_DAILY_IMAGES} รูป`, 'error');
+    return;
+  }
+  const toProcess = files.slice(0, available);
+  if (files.length > available) {
+    toast(currentLang === 'en' ? `Only ${available} more allowed — extra skipped` : `เหลือพื้นที่อีก ${available} รูป รูปเกินถูกข้าม`, 'warning');
+  }
+  let added = 0;
+  for (const file of toProcess) {
+    try {
+      const dataUrl = await compressImageFile(file);
+      dailyImages.push({ id: ++dailyPhotoIdCounter, dataUrl, name: file.name });
+      added++;
+    } catch (e) {
+      toast(currentLang === 'en' ? `Failed: ${file.name}` : `อ่านไฟล์ไม่ได้: ${file.name}`, 'error');
+    }
+  }
+  renderDailyPhotoGrid();
+  if (added > 0) toast(currentLang === 'en' ? `✓ Added ${added} photo(s)` : `✓ แนบ ${added} รูปแล้ว`, 'success');
+}
+
+function removeDailyPhoto(id) {
+  dailyImages = dailyImages.filter(p => p.id !== id);
+  renderDailyPhotoGrid();
+}
+
+function renderDailyPhotoGrid() {
+  const grid = document.getElementById('dailyPhotoGrid');
+  const counter = document.getElementById('dailyPhotoCounter');
+  const uploader = document.getElementById('dailyPhotoUploader');
+  if (!grid) return;
+  grid.innerHTML = '';
+  dailyImages.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'photo-thumb';
+    div.onclick = () => openPhotoPreview(p.dataUrl);
+    div.innerHTML = `
+      <img src="${p.dataUrl}" alt="${escapeHtml(p.name)}" loading="lazy">
+      <span class="photo-thumb-num">#${i + 1}</span>
+      <button class="photo-thumb-del" aria-label="Remove">×</button>
+    `;
+    div.querySelector('.photo-thumb-del').onclick = (e) => {
+      e.stopPropagation();
+      removeDailyPhoto(p.id);
+    };
+    grid.appendChild(div);
+  });
+  if (counter) {
+    counter.textContent = `${dailyImages.length}/${MAX_DAILY_IMAGES}`;
+    counter.classList.toggle('full', dailyImages.length >= MAX_DAILY_IMAGES);
+  }
+  if (uploader) {
+    uploader.classList.toggle('disabled', dailyImages.length >= MAX_DAILY_IMAGES);
+  }
+}
+
+function openPhotoPreview(dataUrl) {
+  const modal = document.getElementById('photoModal');
+  const img = document.getElementById('photoModalImg');
+  if (!modal || !img) return;
+  img.src = dataUrl;
+  modal.classList.add('show');
+}
+
+function closePhotoPreview() {
+  const modal = document.getElementById('photoModal');
+  if (modal) modal.classList.remove('show');
+}
+
+function clearDailyPhotos() {
+  dailyImages = [];
+  renderDailyPhotoGrid();
+}
+
+function setupDailyPhotoDragDrop() {
+  const zone = document.getElementById('dailyPhotoUploader');
+  if (!zone) return;
+  ['dragenter', 'dragover'].forEach(ev => {
+    zone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); zone.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    zone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); zone.classList.remove('dragover'); });
+  });
+  zone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (!files || !files.length) return;
+    const fakeInput = { files, value: '' };
+    handleDailyPhotoUpload(fakeInput);
+  });
 }
 
 function generateWeeklyReport() {
@@ -1758,6 +1943,10 @@ function clearForm(panelId) {
     boqRows = [];
     addBOQRow();
   }
+  // Clear photos for daily report
+  if (panelId === 'panel-report') {
+    clearDailyPhotos();
+  }
   // Reset default date
   const today = localDate();
   ['rpt_date', 'boq_date', 'vo_date'].forEach(id => {
@@ -1834,6 +2023,11 @@ function setupKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
     // ESC: ปิด modal ก่อน, ถ้าไม่มี modal เปิด → ปิด sidebar
     if (e.key === 'Escape') {
+      const photoModal = document.getElementById('photoModal');
+      if (photoModal && photoModal.classList.contains('show')) {
+        closePhotoPreview();
+        return;
+      }
       const modal = document.getElementById('settingsModal');
       if (modal.classList.contains('show')) {
         closeSettings();
@@ -1923,6 +2117,8 @@ function init() {
   setupAutoSave();
   setupErrorAutoClear();
   setupKeyboardShortcuts();
+  setupDailyPhotoDragDrop();
+  renderDailyPhotoGrid();
 
   updateModelTag();
   updateSettingsBtnStatus();
