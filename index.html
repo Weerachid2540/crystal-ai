@@ -264,7 +264,7 @@
   .signature-block { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
   .signature-block-title { font-size: 10px; font-weight: 700; color: var(--accent); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.5px; }
   .signature-canvas-wrap { background: #fff; border: 1px solid var(--border); border-radius: 6px; position: relative; touch-action: none; }
-  .signature-canvas { display: block; width: 100%; height: 100px; cursor: crosshair; border-radius: 6px; }
+  .signature-canvas { display: block; width: 100%; height: 100px; cursor: crosshair; border-radius: 6px; touch-action: none; -ms-touch-action: none; user-select: none; }
   .signature-hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); color: #ccc; font-size: 11px; font-family: var(--mono); pointer-events: none; user-select: none; }
   .signature-canvas-wrap.has-ink .signature-hint { display: none; }
   .signature-actions { display: flex; gap: 6px; align-items: center; }
@@ -546,8 +546,6 @@
               <thead><tr>
                 <th class="col-num">#</th>
                 <th data-i18n="th_desc">รายการงาน / Description</th>
-                <th class="col-grid">Gridline</th>
-                <th class="col-mhr">Plan (Mhr)</th>
                 <th class="col-mhr">Progress</th>
                 <th class="col-due">Status Issue</th>
                 <th class="col-due">Due Date</th>
@@ -582,8 +580,6 @@
               <thead><tr>
                 <th class="col-num">#</th>
                 <th data-i18n="th_desc">รายการงาน / Description</th>
-                <th class="col-grid">Gridline</th>
-                <th class="col-mhr">Plan (Mhr)</th>
                 <th class="col-mhr">Progress</th>
                 <th class="col-due">Status Issue</th>
                 <th class="col-due">Due Date</th>
@@ -682,8 +678,6 @@
               <thead><tr>
                 <th class="col-num">#</th>
                 <th data-i18n="th_desc">รายการงาน / Description</th>
-                <th class="col-grid">Gridline</th>
-                <th class="col-mhr">Plan (Mhr)</th>
                 <th class="col-mhr">Used (Mhr)</th>
                 <th class="col-mhr">Progress</th>
                 <th class="col-due">Status Issue</th>
@@ -719,8 +713,6 @@
               <thead><tr>
                 <th class="col-num">#</th>
                 <th data-i18n="th_desc">รายการงาน / Description</th>
-                <th class="col-grid">Gridline</th>
-                <th class="col-mhr">Plan (Mhr)</th>
                 <th class="col-mhr">Progress</th>
                 <th class="col-due">Status Issue</th>
                 <th class="col-due">Due Date</th>
@@ -1980,8 +1972,6 @@ function _delRow(state, id, renderFn) {
 // Section 1 / 3: Progress (%), Status Issue (date), Due Date (text/date — "Delayed" or completion date)
 const ACT_COLS = [
   { key: 'desc', type: 'text', placeholder: 'งาน...' },
-  { key: 'grid', type: 'text', placeholder: 'A-1', class: 'col-grid' },
-  { key: 'plan', type: 'number', placeholder: 'Mhr', class: 'col-mhr' },
   { key: 'progress', type: 'number', placeholder: '%', class: 'col-mhr' },
   { key: 'statusIssue', type: 'date', class: 'col-due' },
   { key: 'dueDate', type: 'text', placeholder: 'Delayed / dd-mmm-yy', class: 'col-due' },
@@ -1989,8 +1979,6 @@ const ACT_COLS = [
 ];
 const ACT_COLS_M = [
   { key: 'desc', type: 'text', placeholder: 'งาน...' },
-  { key: 'grid', type: 'text', placeholder: 'A-1', class: 'col-grid' },
-  { key: 'plan', type: 'number', placeholder: 'Plan', class: 'col-mhr' },
   { key: 'used', type: 'number', placeholder: 'Used', class: 'col-mhr' },
   { key: 'progress', type: 'number', placeholder: '%', class: 'col-mhr' },
   { key: 'statusIssue', type: 'date', class: 'col-due' },
@@ -2004,8 +1992,6 @@ const ISSUE_COLS = [
 ];
 const NEXT_COLS = [
   { key: 'desc', type: 'text', placeholder: 'งาน...' },
-  { key: 'grid', type: 'text', placeholder: 'A-1', class: 'col-grid' },
-  { key: 'plan', type: 'number', placeholder: 'Mhr', class: 'col-mhr' },
   { key: 'progress', type: 'number', placeholder: '%', class: 'col-mhr' },
   { key: 'statusIssue', type: 'date', class: 'col-due' },
   { key: 'dueDate', type: 'text', placeholder: 'Delayed / dd-mmm-yy', class: 'col-due' }
@@ -2022,9 +2008,9 @@ function renderWkNext() { _renderTable(wkNext, 'wkNextBody', NEXT_COLS,
   (id, f, v) => _updateRow(wkNext, id, f, v, renderWkNext),
   id => _delRow(wkNext, id, renderWkNext)); saveReportTablesDraft('panel-weekly'); }
 
-function addWkActRow() { wkAct.push({ id: _newId(), desc: '', grid: '', plan: '', progress: '', statusIssue: '', dueDate: '', remark: '' }); renderWkAct(); }
+function addWkActRow() { wkAct.push({ id: _newId(), desc: '', progress: '', statusIssue: '', dueDate: '', remark: '' }); renderWkAct(); }
 function addWkIssueRow() { wkIssue.push({ id: _newId(), issue: '', actionBy: '', dueDate: '' }); renderWkIssue(); }
-function addWkNextRow() { wkNext.push({ id: _newId(), desc: '', grid: '', plan: '', progress: '', statusIssue: '', dueDate: '' }); renderWkNext(); }
+function addWkNextRow() { wkNext.push({ id: _newId(), desc: '', progress: '', statusIssue: '', dueDate: '' }); renderWkNext(); }
 
 // Target list (section 4) – Weekly (cols match template image 2)
 let wkTargets = [];
@@ -2049,9 +2035,9 @@ function renderMoNext() { _renderTable(moNext, 'moNextBody', NEXT_COLS,
   (id, f, v) => _updateRow(moNext, id, f, v, renderMoNext),
   id => _delRow(moNext, id, renderMoNext)); saveReportTablesDraft('panel-monthly'); }
 
-function addMoActRow() { moAct.push({ id: _newId(), desc: '', grid: '', plan: '', used: '', progress: '', statusIssue: '', dueDate: '', remark: '' }); renderMoAct(); }
+function addMoActRow() { moAct.push({ id: _newId(), desc: '', used: '', progress: '', statusIssue: '', dueDate: '', remark: '' }); renderMoAct(); }
 function addMoIssueRow() { moIssue.push({ id: _newId(), issue: '', actionBy: '', dueDate: '' }); renderMoIssue(); }
-function addMoNextRow() { moNext.push({ id: _newId(), desc: '', grid: '', plan: '', progress: '', statusIssue: '', dueDate: '' }); renderMoNext(); }
+function addMoNextRow() { moNext.push({ id: _newId(), desc: '', progress: '', statusIssue: '', dueDate: '' }); renderMoNext(); }
 
 // Target list (section 4) – Monthly
 let moTargets = [];
@@ -2098,29 +2084,58 @@ function initSignaturePad(canvasId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const wrap = canvas.parentElement;
-  // Set actual pixel size based on rendered size for crisp drawing
+  let cssWidth = 0, cssHeight = 0;     // last applied CSS size
+  let initialized = false;
+
+  // Re-size canvas backing store to match its rendered CSS size.
+  // KEY FIX: when canvas is in a hidden tab on init, getBoundingClientRect()
+  // returns 0×0. ResizeObserver fires when it later becomes visible, so we
+  // re-run sizing then. Existing pixels are preserved across resizes.
   const setSize = () => {
     const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return; // not visible yet
     const dpr = window.devicePixelRatio || 1;
-    if (rect.width > 0 && (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr)) {
-      const data = canvas.width > 0 ? canvas.toDataURL('image/png') : null;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#0d1b3d';
-      if (data) {
+    const newW = Math.round(rect.width * dpr);
+    const newH = Math.round(rect.height * dpr);
+    if (canvas.width === newW && canvas.height === newH) return;
+    let snapshot = null;
+    if (canvas.width > 0 && canvas.height > 0) {
+      try { snapshot = canvas.toDataURL('image/png'); } catch (e) {}
+    }
+    canvas.width = newW;
+    canvas.height = newH;
+    cssWidth = rect.width;
+    cssHeight = rect.height;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0d1b3d';
+    if (snapshot) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, cssWidth, cssHeight);
+      img.src = snapshot;
+    } else if (!initialized) {
+      // First time becoming visible — restore from localStorage
+      const saved = localStorage.getItem(_sigStorageKey(canvasId));
+      if (saved) {
         const img = new Image();
-        img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
-        img.src = data;
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, cssWidth, cssHeight);
+          wrap.classList.add('has-ink');
+        };
+        img.src = saved;
       }
     }
+    initialized = true;
   };
   setSize();
-  // Re-init on resize (debounced)
+
+  if (window.ResizeObserver) {
+    new ResizeObserver(setSize).observe(canvas);
+  }
   let resizeTimer;
   window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(setSize, 200); });
 
@@ -2137,11 +2152,12 @@ function initSignaturePad(canvasId) {
 
   const start = (e) => {
     e.preventDefault();
+    setSize(); // ensure canvas dimensions are correct before drawing
+    if (canvas.width === 0) return;
     drawing = true;
     const p = getPos(e);
     lastX = p.x; lastY = p.y;
     wrap.classList.add('has-ink');
-    // Dot for tap
     const ctx = canvas.getContext('2d');
     ctx.beginPath();
     ctx.arc(p.x, p.y, 1, 0, Math.PI * 2);
@@ -2167,27 +2183,24 @@ function initSignaturePad(canvasId) {
     saveSignature(canvasId);
   };
 
-  canvas.addEventListener('mousedown', start);
-  canvas.addEventListener('mousemove', move);
-  window.addEventListener('mouseup', end);
-  canvas.addEventListener('touchstart', start, { passive: false });
-  canvas.addEventListener('touchmove', move, { passive: false });
-  canvas.addEventListener('touchend', end);
-  canvas.addEventListener('touchcancel', end);
-
-  // Restore saved signature
-  const saved = localStorage.getItem(_sigStorageKey(canvasId));
-  if (saved) {
-    const img = new Image();
-    img.onload = () => {
-      const rect = canvas.getBoundingClientRect();
-      canvas.getContext('2d').drawImage(img, 0, 0, rect.width, rect.height);
-      wrap.classList.add('has-ink');
-    };
-    img.src = saved;
+  // Pointer events (covers mouse, touch, stylus on modern browsers)
+  if (window.PointerEvent) {
+    canvas.addEventListener('pointerdown', (e) => { canvas.setPointerCapture(e.pointerId); start(e); });
+    canvas.addEventListener('pointermove', move);
+    canvas.addEventListener('pointerup', end);
+    canvas.addEventListener('pointercancel', end);
+    canvas.addEventListener('pointerleave', end);
+  } else {
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
+    canvas.addEventListener('touchcancel', end);
   }
 
-  // Restore name
+  // Name input persistence
   const nameInput = document.getElementById(canvasId + '_name');
   if (nameInput) {
     const savedName = localStorage.getItem(_sigStorageKey(canvasId) + '_name');
@@ -2234,8 +2247,6 @@ function _formatActRows(rows, withUsed) {
   if (!rows.length) return '(none)';
   return rows.map((r, i) => {
     const parts = [`${i + 1}. ${r.desc || '-'}`];
-    if (r.grid) parts.push(`Grid: ${r.grid}`);
-    if (r.plan) parts.push(`Plan: ${r.plan} Mhr`);
     if (withUsed && r.used) parts.push(`Used: ${r.used} Mhr`);
     if (r.progress) parts.push(`Progress: ${r.progress}%`);
     if (r.statusIssue) parts.push(`Status Issue: ${r.statusIssue}`);
@@ -2252,8 +2263,6 @@ function _formatNextRows(rows) {
   if (!rows.length) return '(none)';
   return rows.map((r, i) => {
     const parts = [`${i + 1}. ${r.desc || '-'}`];
-    if (r.grid) parts.push(`Grid: ${r.grid}`);
-    if (r.plan) parts.push(`Plan: ${r.plan} Mhr`);
     if (r.progress) parts.push(`Progress: ${r.progress}%`);
     if (r.statusIssue) parts.push(`Status Issue: ${r.statusIssue}`);
     if (r.dueDate) parts.push(`Due: ${r.dueDate}`);
