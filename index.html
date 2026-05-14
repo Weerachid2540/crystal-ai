@@ -478,16 +478,16 @@
           <div class="section-card-title" data-i18n="signatures">✍️ ลายเซ็น / Signature</div>
           <div class="signature-row" style="grid-template-columns: 1fr">
             <div class="signature-block">
-              <div class="signature-block-title" data-i18n="sig_reporter">Reported by</div>
-              <div class="signature-canvas-wrap" data-sig-id="sigDailyReporter">
-                <canvas class="signature-canvas" id="sigDailyReporter"></canvas>
+              <div class="signature-block-title" data-i18n="sig_approver">Approved by</div>
+              <div class="signature-canvas-wrap" data-sig-id="sigDailyApprover">
+                <canvas class="signature-canvas" id="sigDailyApprover"></canvas>
                 <div class="signature-hint" data-i18n="sig_hint">เซ็นที่นี่</div>
               </div>
               <div class="signature-actions">
-                <button type="button" onclick="clearSignature('sigDailyReporter')" data-i18n="sig_clear">🗑 ล้าง</button>
-                <span class="signature-role" data-i18n="sig_role_reporter">Civil Engineer</span>
+                <button type="button" onclick="clearSignature('sigDailyApprover')" data-i18n="sig_clear">🗑 ล้าง</button>
+                <span class="signature-role">(Civil Engineer)</span>
               </div>
-              <input class="signature-name" id="sigDailyReporter_name" placeholder="ชื่อผู้รายงาน">
+              <input class="signature-name" id="sigDailyApprover_name" placeholder="ชื่อผู้อนุมัติ">
             </div>
           </div>
         </div>
@@ -548,7 +548,9 @@
                 <th data-i18n="th_desc">รายการงาน / Description</th>
                 <th class="col-grid">Gridline</th>
                 <th class="col-mhr">Plan (Mhr)</th>
-                <th class="col-status">Status</th>
+                <th class="col-mhr">Progress</th>
+                <th class="col-due">Status Issue</th>
+                <th class="col-due">Due Date</th>
                 <th>Remark</th>
                 <th class="col-action"></th>
               </tr></thead>
@@ -582,6 +584,9 @@
                 <th data-i18n="th_desc">รายการงาน / Description</th>
                 <th class="col-grid">Gridline</th>
                 <th class="col-mhr">Plan (Mhr)</th>
+                <th class="col-mhr">Progress</th>
+                <th class="col-due">Status Issue</th>
+                <th class="col-due">Due Date</th>
                 <th class="col-action"></th>
               </tr></thead>
               <tbody id="wkNextBody"></tbody>
@@ -596,8 +601,8 @@
               <thead><tr>
                 <th class="col-num">#</th>
                 <th data-i18n="th_target">เป้าหมาย / Target</th>
-                <th class="col-due">Target Date</th>
-                <th class="col-status">Status</th>
+                <th class="col-due">Status Issue</th>
+                <th class="col-due">Due Date</th>
                 <th class="col-action"></th>
               </tr></thead>
               <tbody id="wkTargetBody"></tbody>
@@ -606,20 +611,8 @@
           <button type="button" class="add-row-btn" onclick="addWkTargetRow()" data-i18n="btn_add_row">+ เพิ่มแถว</button>
         </div>
         <div class="section-card">
-          <div class="section-card-title" data-i18n="signatures">✍️ ลายเซ็น / Signatures</div>
-          <div class="signature-row">
-            <div class="signature-block">
-              <div class="signature-block-title" data-i18n="sig_reporter">Reported by</div>
-              <div class="signature-canvas-wrap" data-sig-id="sigWkReporter">
-                <canvas class="signature-canvas" id="sigWkReporter"></canvas>
-                <div class="signature-hint" data-i18n="sig_hint">เซ็นที่นี่</div>
-              </div>
-              <div class="signature-actions">
-                <button type="button" onclick="clearSignature('sigWkReporter')" data-i18n="sig_clear">🗑 ล้าง</button>
-                <span class="signature-role" data-i18n="sig_role_reporter">Civil Engineer</span>
-              </div>
-              <input class="signature-name" id="sigWkReporter_name" placeholder="ชื่อผู้รายงาน">
-            </div>
+          <div class="section-card-title" data-i18n="signatures">✍️ ลายเซ็น / Signature</div>
+          <div class="signature-row" style="grid-template-columns: 1fr">
             <div class="signature-block">
               <div class="signature-block-title" data-i18n="sig_approver">Approved by</div>
               <div class="signature-canvas-wrap" data-sig-id="sigWkApprover">
@@ -628,7 +621,7 @@
               </div>
               <div class="signature-actions">
                 <button type="button" onclick="clearSignature('sigWkApprover')" data-i18n="sig_clear">🗑 ล้าง</button>
-                <span class="signature-role" data-i18n="sig_role_approver">Managing Director</span>
+                <span class="signature-role">(Civil Engineer)</span>
               </div>
               <input class="signature-name" id="sigWkApprover_name" placeholder="ชื่อผู้อนุมัติ">
             </div>
@@ -692,7 +685,9 @@
                 <th class="col-grid">Gridline</th>
                 <th class="col-mhr">Plan (Mhr)</th>
                 <th class="col-mhr">Used (Mhr)</th>
-                <th class="col-status">Status</th>
+                <th class="col-mhr">Progress</th>
+                <th class="col-due">Status Issue</th>
+                <th class="col-due">Due Date</th>
                 <th>Remark</th>
                 <th class="col-action"></th>
               </tr></thead>
@@ -726,6 +721,9 @@
                 <th data-i18n="th_desc">รายการงาน / Description</th>
                 <th class="col-grid">Gridline</th>
                 <th class="col-mhr">Plan (Mhr)</th>
+                <th class="col-mhr">Progress</th>
+                <th class="col-due">Status Issue</th>
+                <th class="col-due">Due Date</th>
                 <th class="col-action"></th>
               </tr></thead>
               <tbody id="moNextBody"></tbody>
@@ -740,8 +738,8 @@
               <thead><tr>
                 <th class="col-num">#</th>
                 <th data-i18n="th_target">เป้าหมาย / Target</th>
-                <th class="col-due">Target Date</th>
-                <th class="col-status">Status</th>
+                <th class="col-due">Status Issue</th>
+                <th class="col-due">Due Date</th>
                 <th class="col-action"></th>
               </tr></thead>
               <tbody id="moTargetBody"></tbody>
@@ -750,20 +748,8 @@
           <button type="button" class="add-row-btn" onclick="addMoTargetRow()" data-i18n="btn_add_row">+ เพิ่มแถว</button>
         </div>
         <div class="section-card">
-          <div class="section-card-title" data-i18n="signatures">✍️ ลายเซ็น / Signatures</div>
-          <div class="signature-row">
-            <div class="signature-block">
-              <div class="signature-block-title" data-i18n="sig_reporter">Reported by</div>
-              <div class="signature-canvas-wrap" data-sig-id="sigMoReporter">
-                <canvas class="signature-canvas" id="sigMoReporter"></canvas>
-                <div class="signature-hint" data-i18n="sig_hint">เซ็นที่นี่</div>
-              </div>
-              <div class="signature-actions">
-                <button type="button" onclick="clearSignature('sigMoReporter')" data-i18n="sig_clear">🗑 ล้าง</button>
-                <span class="signature-role" data-i18n="sig_role_reporter">Civil Engineer</span>
-              </div>
-              <input class="signature-name" id="sigMoReporter_name" placeholder="ชื่อผู้รายงาน">
-            </div>
+          <div class="section-card-title" data-i18n="signatures">✍️ ลายเซ็น / Signature</div>
+          <div class="signature-row" style="grid-template-columns: 1fr">
             <div class="signature-block">
               <div class="signature-block-title" data-i18n="sig_approver">Approved by</div>
               <div class="signature-canvas-wrap" data-sig-id="sigMoApprover">
@@ -772,7 +758,7 @@
               </div>
               <div class="signature-actions">
                 <button type="button" onclick="clearSignature('sigMoApprover')" data-i18n="sig_clear">🗑 ล้าง</button>
-                <span class="signature-role" data-i18n="sig_role_approver">Managing Director</span>
+                <span class="signature-role">(Civil Engineer)</span>
               </div>
               <input class="signature-name" id="sigMoApprover_name" placeholder="ชื่อผู้อนุมัติ">
             </div>
@@ -1929,7 +1915,8 @@ function _renderTable(state, tbodyId, columns, updateFn, delFn) {
   state.forEach((row, i) => {
     const tr = document.createElement('tr');
     tr.dataset.rowId = row.id;
-    if (row.status) tr.dataset.status = row.status;
+    const initColor = _rowColorFor(row);
+    if (initColor) tr.dataset.status = initColor;
     let html = `<td class="col-num">${i + 1}</td>`;
     columns.forEach(col => {
       const v = row[col.key] || '';
@@ -1956,13 +1943,27 @@ function _renderTable(state, tbodyId, columns, updateFn, delFn) {
   });
 }
 
+function _rowColorFor(row) {
+  if (row.dueDate && /delayed/i.test(row.dueDate)) return 'Delayed';
+  const p = parseFloat(row.progress);
+  if (!isNaN(p)) {
+    if (p >= 100) return 'Done';
+    if (p > 0) return 'In Progress';
+  }
+  if (row.status) return row.status; // backward-compat for old rows
+  return null;
+}
+
 function _updateRow(state, id, field, value, renderFn) {
   const row = state.find(r => r.id === id);
   if (!row) return;
   row[field] = value;
-  if (field === 'status') {
+  if (field === 'progress' || field === 'dueDate' || field === 'status') {
     const tr = document.querySelector(`tr[data-row-id="${id}"]`);
-    if (tr) { if (value) tr.dataset.status = value; else delete tr.dataset.status; }
+    if (tr) {
+      const c = _rowColorFor(row);
+      if (c) tr.dataset.status = c; else delete tr.dataset.status;
+    }
   }
   // No re-render: keeps input focus stable
 }
@@ -1975,11 +1976,15 @@ function _delRow(state, id, renderFn) {
 }
 
 // Column definitions -----------------------------------------------------
+// Following Crystal Engineering template (J329-W-005):
+// Section 1 / 3: Progress (%), Status Issue (date), Due Date (text/date — "Delayed" or completion date)
 const ACT_COLS = [
   { key: 'desc', type: 'text', placeholder: 'งาน...' },
   { key: 'grid', type: 'text', placeholder: 'A-1', class: 'col-grid' },
   { key: 'plan', type: 'number', placeholder: 'Mhr', class: 'col-mhr' },
-  { key: 'status', type: 'select', options: STATUS_OPTIONS, class: 'col-status' },
+  { key: 'progress', type: 'number', placeholder: '%', class: 'col-mhr' },
+  { key: 'statusIssue', type: 'date', class: 'col-due' },
+  { key: 'dueDate', type: 'text', placeholder: 'Delayed / dd-mmm-yy', class: 'col-due' },
   { key: 'remark', type: 'text', placeholder: '-' }
 ];
 const ACT_COLS_M = [
@@ -1987,7 +1992,9 @@ const ACT_COLS_M = [
   { key: 'grid', type: 'text', placeholder: 'A-1', class: 'col-grid' },
   { key: 'plan', type: 'number', placeholder: 'Plan', class: 'col-mhr' },
   { key: 'used', type: 'number', placeholder: 'Used', class: 'col-mhr' },
-  { key: 'status', type: 'select', options: STATUS_OPTIONS, class: 'col-status' },
+  { key: 'progress', type: 'number', placeholder: '%', class: 'col-mhr' },
+  { key: 'statusIssue', type: 'date', class: 'col-due' },
+  { key: 'dueDate', type: 'text', placeholder: 'Delayed / dd-mmm-yy', class: 'col-due' },
   { key: 'remark', type: 'text', placeholder: '-' }
 ];
 const ISSUE_COLS = [
@@ -1998,7 +2005,10 @@ const ISSUE_COLS = [
 const NEXT_COLS = [
   { key: 'desc', type: 'text', placeholder: 'งาน...' },
   { key: 'grid', type: 'text', placeholder: 'A-1', class: 'col-grid' },
-  { key: 'plan', type: 'number', placeholder: 'Mhr', class: 'col-mhr' }
+  { key: 'plan', type: 'number', placeholder: 'Mhr', class: 'col-mhr' },
+  { key: 'progress', type: 'number', placeholder: '%', class: 'col-mhr' },
+  { key: 'statusIssue', type: 'date', class: 'col-due' },
+  { key: 'dueDate', type: 'text', placeholder: 'Delayed / dd-mmm-yy', class: 'col-due' }
 ];
 
 // Weekly bindings --------------------------------------------------------
@@ -2012,21 +2022,21 @@ function renderWkNext() { _renderTable(wkNext, 'wkNextBody', NEXT_COLS,
   (id, f, v) => _updateRow(wkNext, id, f, v, renderWkNext),
   id => _delRow(wkNext, id, renderWkNext)); saveReportTablesDraft('panel-weekly'); }
 
-function addWkActRow() { wkAct.push({ id: _newId(), desc: '', grid: '', plan: '', status: '', remark: '' }); renderWkAct(); }
+function addWkActRow() { wkAct.push({ id: _newId(), desc: '', grid: '', plan: '', progress: '', statusIssue: '', dueDate: '', remark: '' }); renderWkAct(); }
 function addWkIssueRow() { wkIssue.push({ id: _newId(), issue: '', actionBy: '', dueDate: '' }); renderWkIssue(); }
-function addWkNextRow() { wkNext.push({ id: _newId(), desc: '', grid: '', plan: '' }); renderWkNext(); }
+function addWkNextRow() { wkNext.push({ id: _newId(), desc: '', grid: '', plan: '', progress: '', statusIssue: '', dueDate: '' }); renderWkNext(); }
 
-// Target list (section 4) – Weekly
+// Target list (section 4) – Weekly (cols match template image 2)
 let wkTargets = [];
 const TARGET_COLS = [
   { key: 'target', type: 'text', placeholder: 'เป้าหมายที่ต้องเร่ง...' },
-  { key: 'targetDate', type: 'date', class: 'col-due' },
-  { key: 'status', type: 'select', options: STATUS_OPTIONS, class: 'col-status' }
+  { key: 'statusIssue', type: 'date', class: 'col-due' },
+  { key: 'dueDate', type: 'text', placeholder: 'Delayed / dd-mmm-yy', class: 'col-due' }
 ];
 function renderWkTarget() { _renderTable(wkTargets, 'wkTargetBody', TARGET_COLS,
   (id, f, v) => _updateRow(wkTargets, id, f, v, renderWkTarget),
   id => _delRow(wkTargets, id, renderWkTarget)); saveReportTablesDraft('panel-weekly'); }
-function addWkTargetRow() { wkTargets.push({ id: _newId(), target: '', targetDate: '', status: '' }); renderWkTarget(); }
+function addWkTargetRow() { wkTargets.push({ id: _newId(), target: '', statusIssue: '', dueDate: '' }); renderWkTarget(); }
 
 // Monthly bindings -------------------------------------------------------
 function renderMoAct() { _renderTable(moAct, 'moActBody', ACT_COLS_M,
@@ -2039,16 +2049,16 @@ function renderMoNext() { _renderTable(moNext, 'moNextBody', NEXT_COLS,
   (id, f, v) => _updateRow(moNext, id, f, v, renderMoNext),
   id => _delRow(moNext, id, renderMoNext)); saveReportTablesDraft('panel-monthly'); }
 
-function addMoActRow() { moAct.push({ id: _newId(), desc: '', grid: '', plan: '', used: '', status: '', remark: '' }); renderMoAct(); }
+function addMoActRow() { moAct.push({ id: _newId(), desc: '', grid: '', plan: '', used: '', progress: '', statusIssue: '', dueDate: '', remark: '' }); renderMoAct(); }
 function addMoIssueRow() { moIssue.push({ id: _newId(), issue: '', actionBy: '', dueDate: '' }); renderMoIssue(); }
-function addMoNextRow() { moNext.push({ id: _newId(), desc: '', grid: '', plan: '' }); renderMoNext(); }
+function addMoNextRow() { moNext.push({ id: _newId(), desc: '', grid: '', plan: '', progress: '', statusIssue: '', dueDate: '' }); renderMoNext(); }
 
 // Target list (section 4) – Monthly
 let moTargets = [];
 function renderMoTarget() { _renderTable(moTargets, 'moTargetBody', TARGET_COLS,
   (id, f, v) => _updateRow(moTargets, id, f, v, renderMoTarget),
   id => _delRow(moTargets, id, renderMoTarget)); saveReportTablesDraft('panel-monthly'); }
-function addMoTargetRow() { moTargets.push({ id: _newId(), target: '', targetDate: '', status: '' }); renderMoTarget(); }
+function addMoTargetRow() { moTargets.push({ id: _newId(), target: '', statusIssue: '', dueDate: '' }); renderMoTarget(); }
 
 // Persist tables in localStorage (separate keys, larger than form drafts)
 function saveReportTablesDraft(panelId) {
@@ -2080,7 +2090,7 @@ function loadReportTables() {
 // SIGNATURE PADS — draw with mouse / finger / stylus
 // Stored as PNG dataURL in localStorage; restored on init.
 // ============================================================
-const SIGNATURE_IDS = ['sigDailyReporter', 'sigWkReporter', 'sigWkApprover', 'sigMoReporter', 'sigMoApprover'];
+const SIGNATURE_IDS = ['sigDailyApprover', 'sigWkApprover', 'sigMoApprover'];
 
 function _sigStorageKey(id) { return 'crystal_sig_' + id; }
 
@@ -2227,7 +2237,9 @@ function _formatActRows(rows, withUsed) {
     if (r.grid) parts.push(`Grid: ${r.grid}`);
     if (r.plan) parts.push(`Plan: ${r.plan} Mhr`);
     if (withUsed && r.used) parts.push(`Used: ${r.used} Mhr`);
-    if (r.status) parts.push(`Status: ${r.status}`);
+    if (r.progress) parts.push(`Progress: ${r.progress}%`);
+    if (r.statusIssue) parts.push(`Status Issue: ${r.statusIssue}`);
+    if (r.dueDate) parts.push(`Due: ${r.dueDate}`);
     if (r.remark) parts.push(`Remark: ${r.remark}`);
     return parts.join(' | ');
   }).join('\n');
@@ -2242,6 +2254,18 @@ function _formatNextRows(rows) {
     const parts = [`${i + 1}. ${r.desc || '-'}`];
     if (r.grid) parts.push(`Grid: ${r.grid}`);
     if (r.plan) parts.push(`Plan: ${r.plan} Mhr`);
+    if (r.progress) parts.push(`Progress: ${r.progress}%`);
+    if (r.statusIssue) parts.push(`Status Issue: ${r.statusIssue}`);
+    if (r.dueDate) parts.push(`Due: ${r.dueDate}`);
+    return parts.join(' | ');
+  }).join('\n');
+}
+function _formatTargetRows(rows) {
+  if (!rows.length) return '-';
+  return rows.map((r, i) => {
+    const parts = [`${i + 1}. ${r.target || '-'}`];
+    if (r.statusIssue) parts.push(`Status Issue: ${r.statusIssue}`);
+    if (r.dueDate) parts.push(`Due: ${r.dueDate}`);
     return parts.join(' | ');
   }).join('\n');
 }
@@ -2272,7 +2296,7 @@ ${_formatIssueRows(wkIssue)}
 ${_formatNextRows(wkNext)}
 
 [4. CURRENT IMPORTANT TARGETS]
-${wkTargets.length ? wkTargets.map((r,i) => `${i+1}. ${r.target || '-'}${r.targetDate ? ' | Target: ' + r.targetDate : ''}${r.status ? ' | Status: ' + r.status : ''}`).join('\n') : '-'}
+${_formatTargetRows(wkTargets)}
 
 Output a clean formal report with: bolded section headings (1. This Week Activities, 2. Major Issues, 3. Next Week Activities, 4. Current Important Targets), bullet points or numbered lists where appropriate, brief variance analysis (Plan vs Actual), and a polite closing summary suitable for management review.`;
   runGenerator({ panelId: 'panel-weekly', loadId: 'loadingWeekly', btnId: 'genWeeklyBtn', areaId: 'resultWeekly', textId: 'resultWeeklyText', prompt });
@@ -2304,7 +2328,7 @@ ${_formatIssueRows(moIssue)}
 ${_formatNextRows(moNext)}
 
 [4. CURRENT IMPORTANT TARGETS]
-${moTargets.length ? moTargets.map((r,i) => `${i+1}. ${r.target || '-'}${r.targetDate ? ' | Target: ' + r.targetDate : ''}${r.status ? ' | Status: ' + r.status : ''}`).join('\n') : '-'}
+${_formatTargetRows(moTargets)}
 
 Output a polished monthly report with: an Executive Summary at the top, bolded section headings, bullet points where useful, a Plan-vs-Actual variance analysis with brief commentary, and a concluding outlook for the next month.`;
   runGenerator({ panelId: 'panel-monthly', loadId: 'loadingMonthly', btnId: 'genMonthlyBtn', areaId: 'resultMonthly', textId: 'resultMonthlyText', prompt });
@@ -2633,21 +2657,21 @@ function clearForm(panelId) {
   // Clear photos for daily report
   if (panelId === 'panel-report') {
     clearDailyPhotos();
-    clearSignatureGroup(['sigDailyReporter']);
+    clearSignatureGroup(['sigDailyApprover']);
   }
   // Clear weekly tables + signatures
   if (panelId === 'panel-weekly') {
     wkAct = []; wkIssue = []; wkNext = []; wkTargets = [];
     localStorage.removeItem('crystal_wk_tables');
     renderWkAct(); renderWkIssue(); renderWkNext(); renderWkTarget();
-    clearSignatureGroup(['sigWkReporter', 'sigWkApprover']);
+    clearSignatureGroup(['sigWkApprover']);
   }
   // Clear monthly tables + signatures
   if (panelId === 'panel-monthly') {
     moAct = []; moIssue = []; moNext = []; moTargets = [];
     localStorage.removeItem('crystal_mo_tables');
     renderMoAct(); renderMoIssue(); renderMoNext(); renderMoTarget();
-    clearSignatureGroup(['sigMoReporter', 'sigMoApprover']);
+    clearSignatureGroup(['sigMoApprover']);
   }
   // Reset default date
   const today = localDate();
