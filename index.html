@@ -258,6 +258,21 @@
     .logo-icon-wrap { width: 34px; height: 34px; }
   }
 
+  /* SIGNATURE PADS (Reporter / Approver) */
+  .signature-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px) { .signature-row { grid-template-columns: 1fr; } }
+  .signature-block { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .signature-block-title { font-size: 10px; font-weight: 700; color: var(--accent); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.5px; }
+  .signature-canvas-wrap { background: #fff; border: 1px solid var(--border); border-radius: 6px; position: relative; touch-action: none; }
+  .signature-canvas { display: block; width: 100%; height: 100px; cursor: crosshair; border-radius: 6px; }
+  .signature-hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); color: #ccc; font-size: 11px; font-family: var(--mono); pointer-events: none; user-select: none; }
+  .signature-canvas-wrap.has-ink .signature-hint { display: none; }
+  .signature-actions { display: flex; gap: 6px; align-items: center; }
+  .signature-actions button { background: var(--tag-bg); border: 1px solid var(--border); color: var(--text2); padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-family: var(--mono); }
+  .signature-actions button:hover { border-color: var(--accent); color: var(--accent); }
+  .signature-name { font-size: 12px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-family: var(--font); }
+  .signature-role { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
   /* REPORT TABLES (Weekly / Monthly structured data) */
   .report-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: 6px; }
   .report-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; }
@@ -312,7 +327,12 @@
     .menu-btn, .lang-switch, .mode-tag, .icon-btn, .send-btn, .gen-btn, .ghost-btn,
     .add-row-btn, .clear-all-btn, .del-row-btn, .result-toolbar, .field-error,
     .doc-type-grid, .boq-actions, .photo-uploader, .photo-thumb-del,
-    .add-row-btn, .report-table .col-action, .report-table .del-row-btn { display: none !important; }
+    .add-row-btn, .report-table .col-action, .report-table .del-row-btn,
+    .signature-actions, .signature-hint { display: none !important; }
+    .signature-block { background: white; border: 1px solid #999; color: black; page-break-inside: avoid; }
+    .signature-block-title, .signature-role { color: black; }
+    .signature-canvas-wrap { background: white; border: 1px solid #999; }
+    .signature-name { background: white; color: black; border: none; border-bottom: 1px solid #999; padding: 6px 0; }
     .report-table-wrap { overflow: visible !important; border: 1px solid #888; }
     .report-table { font-size: 10px; min-width: 0; }
     .report-table th, .report-table td { color: black; border: 1px solid #999; padding: 3px 4px; }
@@ -454,6 +474,23 @@
           <input type="file" id="dailyPhotoInput" accept="image/*" multiple style="display:none" onchange="handleDailyPhotoUpload(this)">
           <div class="photo-grid" id="dailyPhotoGrid"></div>
         </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="signatures">✍️ ลายเซ็น / Signature</div>
+          <div class="signature-row" style="grid-template-columns: 1fr">
+            <div class="signature-block">
+              <div class="signature-block-title" data-i18n="sig_reporter">Reported by</div>
+              <div class="signature-canvas-wrap" data-sig-id="sigDailyReporter">
+                <canvas class="signature-canvas" id="sigDailyReporter"></canvas>
+                <div class="signature-hint" data-i18n="sig_hint">เซ็นที่นี่</div>
+              </div>
+              <div class="signature-actions">
+                <button type="button" onclick="clearSignature('sigDailyReporter')" data-i18n="sig_clear">🗑 ล้าง</button>
+                <span class="signature-role" data-i18n="sig_role_reporter">Civil Engineer</span>
+              </div>
+              <input class="signature-name" id="sigDailyReporter_name" placeholder="ชื่อผู้รายงาน">
+            </div>
+          </div>
+        </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <button class="gen-btn" id="genDailyBtn" onclick="generateDailyReport()">✨ <span data-i18n="btn_generate">สร้างรีพอต</span></button>
           <button class="ghost-btn" onclick="clearForm('panel-report')" data-i18n="clear_form">🗑 ล้างฟอร์ม</button>
@@ -482,10 +519,8 @@
             <div class="field"><label data-i18n="lbl_dept">Department</label><input id="wk_dept" value="Civil Department"/></div>
             <div class="field"><label data-i18n="lbl_worktype">Work Type</label>
               <select id="wk_worktype">
+                <option>Conductor</option>
                 <option>Consultant</option>
-                <option>EPC TURNKEY</option>
-                <option>PRIVILEGE SERVICE</option>
-                <option>Site Supervision</option>
               </select>
             </div>
             <div class="field"><label data-i18n="lbl_workdesc">Work Description</label><input id="wk_workdesc" placeholder="เช่น Control work for Renovate Building"/></div>
@@ -556,8 +591,47 @@
         </div>
         <div class="section-card">
           <div class="section-card-title" data-i18n="sec4_targets">4. เป้าหมายสำคัญ / Current Important Targets</div>
-          <div class="form-grid full">
-            <div class="field"><textarea id="wk_targets" placeholder="ระบุเป้าหมายหลักของโครงการที่ต้องเร่งให้เสร็จ..."></textarea></div>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead><tr>
+                <th class="col-num">#</th>
+                <th data-i18n="th_target">เป้าหมาย / Target</th>
+                <th class="col-due">Target Date</th>
+                <th class="col-status">Status</th>
+                <th class="col-action"></th>
+              </tr></thead>
+              <tbody id="wkTargetBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="add-row-btn" onclick="addWkTargetRow()" data-i18n="btn_add_row">+ เพิ่มแถว</button>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="signatures">✍️ ลายเซ็น / Signatures</div>
+          <div class="signature-row">
+            <div class="signature-block">
+              <div class="signature-block-title" data-i18n="sig_reporter">Reported by</div>
+              <div class="signature-canvas-wrap" data-sig-id="sigWkReporter">
+                <canvas class="signature-canvas" id="sigWkReporter"></canvas>
+                <div class="signature-hint" data-i18n="sig_hint">เซ็นที่นี่</div>
+              </div>
+              <div class="signature-actions">
+                <button type="button" onclick="clearSignature('sigWkReporter')" data-i18n="sig_clear">🗑 ล้าง</button>
+                <span class="signature-role" data-i18n="sig_role_reporter">Civil Engineer</span>
+              </div>
+              <input class="signature-name" id="sigWkReporter_name" placeholder="ชื่อผู้รายงาน">
+            </div>
+            <div class="signature-block">
+              <div class="signature-block-title" data-i18n="sig_approver">Approved by</div>
+              <div class="signature-canvas-wrap" data-sig-id="sigWkApprover">
+                <canvas class="signature-canvas" id="sigWkApprover"></canvas>
+                <div class="signature-hint" data-i18n="sig_hint">เซ็นที่นี่</div>
+              </div>
+              <div class="signature-actions">
+                <button type="button" onclick="clearSignature('sigWkApprover')" data-i18n="sig_clear">🗑 ล้าง</button>
+                <span class="signature-role" data-i18n="sig_role_approver">Managing Director</span>
+              </div>
+              <input class="signature-name" id="sigWkApprover_name" placeholder="ชื่อผู้อนุมัติ">
+            </div>
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -588,10 +662,8 @@
             <div class="field"><label data-i18n="lbl_dept">Department</label><input id="mo_dept" value="Civil Department"/></div>
             <div class="field"><label data-i18n="lbl_worktype">Work Type</label>
               <select id="mo_worktype">
+                <option>Conductor</option>
                 <option>Consultant</option>
-                <option>EPC TURNKEY</option>
-                <option>PRIVILEGE SERVICE</option>
-                <option>Site Supervision</option>
               </select>
             </div>
             <div class="field"><label data-i18n="lbl_workdesc">Work Description</label><input id="mo_workdesc" placeholder="เช่น Control work for Renovate Building"/></div>
@@ -663,8 +735,47 @@
         </div>
         <div class="section-card">
           <div class="section-card-title" data-i18n="sec4_targets">4. เป้าหมายสำคัญ / Current Important Targets</div>
-          <div class="form-grid full">
-            <div class="field"><textarea id="mo_targets" placeholder="ระบุเป้าหมายหลักของโครงการที่ต้องเร่งให้เสร็จ..."></textarea></div>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead><tr>
+                <th class="col-num">#</th>
+                <th data-i18n="th_target">เป้าหมาย / Target</th>
+                <th class="col-due">Target Date</th>
+                <th class="col-status">Status</th>
+                <th class="col-action"></th>
+              </tr></thead>
+              <tbody id="moTargetBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="add-row-btn" onclick="addMoTargetRow()" data-i18n="btn_add_row">+ เพิ่มแถว</button>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="signatures">✍️ ลายเซ็น / Signatures</div>
+          <div class="signature-row">
+            <div class="signature-block">
+              <div class="signature-block-title" data-i18n="sig_reporter">Reported by</div>
+              <div class="signature-canvas-wrap" data-sig-id="sigMoReporter">
+                <canvas class="signature-canvas" id="sigMoReporter"></canvas>
+                <div class="signature-hint" data-i18n="sig_hint">เซ็นที่นี่</div>
+              </div>
+              <div class="signature-actions">
+                <button type="button" onclick="clearSignature('sigMoReporter')" data-i18n="sig_clear">🗑 ล้าง</button>
+                <span class="signature-role" data-i18n="sig_role_reporter">Civil Engineer</span>
+              </div>
+              <input class="signature-name" id="sigMoReporter_name" placeholder="ชื่อผู้รายงาน">
+            </div>
+            <div class="signature-block">
+              <div class="signature-block-title" data-i18n="sig_approver">Approved by</div>
+              <div class="signature-canvas-wrap" data-sig-id="sigMoApprover">
+                <canvas class="signature-canvas" id="sigMoApprover"></canvas>
+                <div class="signature-hint" data-i18n="sig_hint">เซ็นที่นี่</div>
+              </div>
+              <div class="signature-actions">
+                <button type="button" onclick="clearSignature('sigMoApprover')" data-i18n="sig_clear">🗑 ล้าง</button>
+                <span class="signature-role" data-i18n="sig_role_approver">Managing Director</span>
+              </div>
+              <input class="signature-name" id="sigMoApprover_name" placeholder="ชื่อผู้อนุมัติ">
+            </div>
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -884,7 +995,9 @@ const I18N = {
     sec1_week: '1. งาน Week นี้ / This Week Activities', sec1_month: '1. งานเดือนนี้ / This Month Activities',
     sec2_issues: '2. ปัญหาและ Issue สำคัญ', sec3_next_week: '3. Plan สัปดาห์หน้า / Next Week',
     sec3_next_month: '3. Plan เดือนหน้า / Next Month', sec4_targets: '4. เป้าหมายสำคัญ / Important Targets',
-    th_desc: 'รายการงาน / Description', th_issue: 'ปัญหา / Issue', btn_add_row: '+ เพิ่มแถว',
+    th_desc: 'รายการงาน / Description', th_issue: 'ปัญหา / Issue', th_target: 'เป้าหมาย / Target', btn_add_row: '+ เพิ่มแถว',
+    signatures: '✍️ ลายเซ็น / Signatures', sig_reporter: 'Reported by', sig_approver: 'Approved by',
+    sig_clear: '🗑 ล้าง', sig_hint: 'เซ็นที่นี่', sig_role_reporter: 'Civil Engineer', sig_role_approver: 'Managing Director',
     doc_type: 'ประเภทเอกสาร', doc_info: 'ข้อมูลเอกสาร', material_list: 'รายการวัสดุ / งาน',
     vo_info: 'ข้อมูล VO', detail: 'รายละเอียด',
     lbl_project: 'ชื่อ Project', lbl_date: 'วันที่', lbl_reporter: 'ผู้รายงาน', lbl_weather: 'สภาพอากาศ',
@@ -946,7 +1059,9 @@ const I18N = {
     sec1_week: '1. งานที่ทำสัปดาห์นี้', sec1_month: '1. งานที่ทำเดือนนี้',
     sec2_issues: '2. ปัญหาและประเด็นสำคัญ', sec3_next_week: '3. แผนงานสัปดาห์หน้า',
     sec3_next_month: '3. แผนงานเดือนหน้า', sec4_targets: '4. เป้าหมายสำคัญที่ต้องเร่ง',
-    th_desc: 'รายการงาน', th_issue: 'รายละเอียดปัญหา', btn_add_row: '+ เพิ่มแถว',
+    th_desc: 'รายการงาน', th_issue: 'รายละเอียดปัญหา', th_target: 'เป้าหมายที่ต้องเร่ง', btn_add_row: '+ เพิ่มแถว',
+    signatures: '✍️ ลายเซ็น', sig_reporter: 'ผู้รายงาน', sig_approver: 'ผู้อนุมัติ',
+    sig_clear: '🗑 ล้าง', sig_hint: 'เซ็นที่นี่', sig_role_reporter: 'วิศวกรโยธา', sig_role_approver: 'กรรมการผู้จัดการ',
     doc_type: 'ประเภทเอกสาร', doc_info: 'ข้อมูลเอกสาร', material_list: 'รายการวัสดุ / งาน',
     vo_info: 'ข้อมูลคำสั่งเปลี่ยนแปลง', detail: 'รายละเอียด',
     lbl_project: 'ชื่อโครงการ', lbl_date: 'วันที่', lbl_reporter: 'ผู้รายงาน', lbl_weather: 'สภาพอากาศ',
@@ -1008,7 +1123,9 @@ const I18N = {
     sec1_week: '1. This Week Activities', sec1_month: '1. This Month Activities',
     sec2_issues: '2. Major Issues & Outstanding', sec3_next_week: '3. Next Week Activities',
     sec3_next_month: '3. Next Month Activities', sec4_targets: '4. Current Important Targets',
-    th_desc: 'Description', th_issue: 'Issue', btn_add_row: '+ Add Row',
+    th_desc: 'Description', th_issue: 'Issue', th_target: 'Target', btn_add_row: '+ Add Row',
+    signatures: '✍️ Signatures', sig_reporter: 'Reported by', sig_approver: 'Approved by',
+    sig_clear: '🗑 Clear', sig_hint: 'Sign here', sig_role_reporter: 'Civil Engineer', sig_role_approver: 'Managing Director',
     doc_type: 'Document Type', doc_info: 'Document Info', material_list: 'Materials / Work Items',
     vo_info: 'VO Information', detail: 'Details',
     lbl_project: 'Project Name', lbl_date: 'Date', lbl_reporter: 'Reporter', lbl_weather: 'Weather',
@@ -1899,6 +2016,18 @@ function addWkActRow() { wkAct.push({ id: _newId(), desc: '', grid: '', plan: ''
 function addWkIssueRow() { wkIssue.push({ id: _newId(), issue: '', actionBy: '', dueDate: '' }); renderWkIssue(); }
 function addWkNextRow() { wkNext.push({ id: _newId(), desc: '', grid: '', plan: '' }); renderWkNext(); }
 
+// Target list (section 4) – Weekly
+let wkTargets = [];
+const TARGET_COLS = [
+  { key: 'target', type: 'text', placeholder: 'เป้าหมายที่ต้องเร่ง...' },
+  { key: 'targetDate', type: 'date', class: 'col-due' },
+  { key: 'status', type: 'select', options: STATUS_OPTIONS, class: 'col-status' }
+];
+function renderWkTarget() { _renderTable(wkTargets, 'wkTargetBody', TARGET_COLS,
+  (id, f, v) => _updateRow(wkTargets, id, f, v, renderWkTarget),
+  id => _delRow(wkTargets, id, renderWkTarget)); saveReportTablesDraft('panel-weekly'); }
+function addWkTargetRow() { wkTargets.push({ id: _newId(), target: '', targetDate: '', status: '' }); renderWkTarget(); }
+
 // Monthly bindings -------------------------------------------------------
 function renderMoAct() { _renderTable(moAct, 'moActBody', ACT_COLS_M,
   (id, f, v) => _updateRow(moAct, id, f, v, renderMoAct),
@@ -1914,13 +2043,20 @@ function addMoActRow() { moAct.push({ id: _newId(), desc: '', grid: '', plan: ''
 function addMoIssueRow() { moIssue.push({ id: _newId(), issue: '', actionBy: '', dueDate: '' }); renderMoIssue(); }
 function addMoNextRow() { moNext.push({ id: _newId(), desc: '', grid: '', plan: '' }); renderMoNext(); }
 
+// Target list (section 4) – Monthly
+let moTargets = [];
+function renderMoTarget() { _renderTable(moTargets, 'moTargetBody', TARGET_COLS,
+  (id, f, v) => _updateRow(moTargets, id, f, v, renderMoTarget),
+  id => _delRow(moTargets, id, renderMoTarget)); saveReportTablesDraft('panel-monthly'); }
+function addMoTargetRow() { moTargets.push({ id: _newId(), target: '', targetDate: '', status: '' }); renderMoTarget(); }
+
 // Persist tables in localStorage (separate keys, larger than form drafts)
 function saveReportTablesDraft(panelId) {
   try {
     if (panelId === 'panel-weekly') {
-      localStorage.setItem('crystal_wk_tables', JSON.stringify({ act: wkAct, issue: wkIssue, next: wkNext }));
+      localStorage.setItem('crystal_wk_tables', JSON.stringify({ act: wkAct, issue: wkIssue, next: wkNext, targets: wkTargets }));
     } else if (panelId === 'panel-monthly') {
-      localStorage.setItem('crystal_mo_tables', JSON.stringify({ act: moAct, issue: moIssue, next: moNext }));
+      localStorage.setItem('crystal_mo_tables', JSON.stringify({ act: moAct, issue: moIssue, next: moNext, targets: moTargets }));
     }
   } catch (e) {}
 }
@@ -1928,16 +2064,159 @@ function saveReportTablesDraft(panelId) {
 function loadReportTables() {
   const wk = safeJsonParse(localStorage.getItem('crystal_wk_tables'), null);
   if (wk) {
-    wkAct = wk.act || []; wkIssue = wk.issue || []; wkNext = wk.next || [];
-    [...wkAct, ...wkIssue, ...wkNext].forEach(r => { if (r.id > reportRowIdCounter) reportRowIdCounter = r.id; });
+    wkAct = wk.act || []; wkIssue = wk.issue || []; wkNext = wk.next || []; wkTargets = wk.targets || [];
+    [...wkAct, ...wkIssue, ...wkNext, ...wkTargets].forEach(r => { if (r.id > reportRowIdCounter) reportRowIdCounter = r.id; });
   }
   const mo = safeJsonParse(localStorage.getItem('crystal_mo_tables'), null);
   if (mo) {
-    moAct = mo.act || []; moIssue = mo.issue || []; moNext = mo.next || [];
-    [...moAct, ...moIssue, ...moNext].forEach(r => { if (r.id > reportRowIdCounter) reportRowIdCounter = r.id; });
+    moAct = mo.act || []; moIssue = mo.issue || []; moNext = mo.next || []; moTargets = mo.targets || [];
+    [...moAct, ...moIssue, ...moNext, ...moTargets].forEach(r => { if (r.id > reportRowIdCounter) reportRowIdCounter = r.id; });
   }
-  renderWkAct(); renderWkIssue(); renderWkNext();
-  renderMoAct(); renderMoIssue(); renderMoNext();
+  renderWkAct(); renderWkIssue(); renderWkNext(); renderWkTarget();
+  renderMoAct(); renderMoIssue(); renderMoNext(); renderMoTarget();
+}
+
+// ============================================================
+// SIGNATURE PADS — draw with mouse / finger / stylus
+// Stored as PNG dataURL in localStorage; restored on init.
+// ============================================================
+const SIGNATURE_IDS = ['sigDailyReporter', 'sigWkReporter', 'sigWkApprover', 'sigMoReporter', 'sigMoApprover'];
+
+function _sigStorageKey(id) { return 'crystal_sig_' + id; }
+
+function initSignaturePad(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const wrap = canvas.parentElement;
+  // Set actual pixel size based on rendered size for crisp drawing
+  const setSize = () => {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    if (rect.width > 0 && (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr)) {
+      const data = canvas.width > 0 ? canvas.toDataURL('image/png') : null;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#0d1b3d';
+      if (data) {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+        img.src = data;
+      }
+    }
+  };
+  setSize();
+  // Re-init on resize (debounced)
+  let resizeTimer;
+  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(setSize, 200); });
+
+  let drawing = false;
+  let lastX = 0, lastY = 0;
+
+  const getPos = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const t = e.touches && e.touches[0];
+    const cx = t ? t.clientX : e.clientX;
+    const cy = t ? t.clientY : e.clientY;
+    return { x: cx - rect.left, y: cy - rect.top };
+  };
+
+  const start = (e) => {
+    e.preventDefault();
+    drawing = true;
+    const p = getPos(e);
+    lastX = p.x; lastY = p.y;
+    wrap.classList.add('has-ink');
+    // Dot for tap
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 1, 0, Math.PI * 2);
+    ctx.fillStyle = '#0d1b3d';
+    ctx.fill();
+  };
+
+  const move = (e) => {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+  };
+
+  const end = () => {
+    if (!drawing) return;
+    drawing = false;
+    saveSignature(canvasId);
+  };
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+  canvas.addEventListener('touchcancel', end);
+
+  // Restore saved signature
+  const saved = localStorage.getItem(_sigStorageKey(canvasId));
+  if (saved) {
+    const img = new Image();
+    img.onload = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.getContext('2d').drawImage(img, 0, 0, rect.width, rect.height);
+      wrap.classList.add('has-ink');
+    };
+    img.src = saved;
+  }
+
+  // Restore name
+  const nameInput = document.getElementById(canvasId + '_name');
+  if (nameInput) {
+    const savedName = localStorage.getItem(_sigStorageKey(canvasId) + '_name');
+    if (savedName) nameInput.value = savedName;
+    nameInput.addEventListener('input', () => {
+      localStorage.setItem(_sigStorageKey(canvasId) + '_name', nameInput.value);
+    });
+  }
+}
+
+function saveSignature(canvasId) {
+  try {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || canvas.width === 0) return;
+    const dataUrl = canvas.toDataURL('image/png');
+    localStorage.setItem(_sigStorageKey(canvasId), dataUrl);
+  } catch (e) {}
+}
+
+function clearSignature(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.parentElement.classList.remove('has-ink');
+  localStorage.removeItem(_sigStorageKey(canvasId));
+}
+
+function clearSignatureGroup(prefixes) {
+  prefixes.forEach(id => {
+    clearSignature(id);
+    const nameInput = document.getElementById(id + '_name');
+    if (nameInput) nameInput.value = '';
+    localStorage.removeItem(_sigStorageKey(id) + '_name');
+  });
+}
+
+function setupAllSignaturePads() {
+  SIGNATURE_IDS.forEach(initSignaturePad);
 }
 
 // Format table data into prompt-friendly text ----------------------------
@@ -1993,7 +2272,7 @@ ${_formatIssueRows(wkIssue)}
 ${_formatNextRows(wkNext)}
 
 [4. CURRENT IMPORTANT TARGETS]
-${val('wk_targets') || '-'}
+${wkTargets.length ? wkTargets.map((r,i) => `${i+1}. ${r.target || '-'}${r.targetDate ? ' | Target: ' + r.targetDate : ''}${r.status ? ' | Status: ' + r.status : ''}`).join('\n') : '-'}
 
 Output a clean formal report with: bolded section headings (1. This Week Activities, 2. Major Issues, 3. Next Week Activities, 4. Current Important Targets), bullet points or numbered lists where appropriate, brief variance analysis (Plan vs Actual), and a polite closing summary suitable for management review.`;
   runGenerator({ panelId: 'panel-weekly', loadId: 'loadingWeekly', btnId: 'genWeeklyBtn', areaId: 'resultWeekly', textId: 'resultWeeklyText', prompt });
@@ -2025,7 +2304,7 @@ ${_formatIssueRows(moIssue)}
 ${_formatNextRows(moNext)}
 
 [4. CURRENT IMPORTANT TARGETS]
-${val('mo_targets') || '-'}
+${moTargets.length ? moTargets.map((r,i) => `${i+1}. ${r.target || '-'}${r.targetDate ? ' | Target: ' + r.targetDate : ''}${r.status ? ' | Status: ' + r.status : ''}`).join('\n') : '-'}
 
 Output a polished monthly report with: an Executive Summary at the top, bolded section headings, bullet points where useful, a Plan-vs-Actual variance analysis with brief commentary, and a concluding outlook for the next month.`;
   runGenerator({ panelId: 'panel-monthly', loadId: 'loadingMonthly', btnId: 'genMonthlyBtn', areaId: 'resultMonthly', textId: 'resultMonthlyText', prompt });
@@ -2354,18 +2633,21 @@ function clearForm(panelId) {
   // Clear photos for daily report
   if (panelId === 'panel-report') {
     clearDailyPhotos();
+    clearSignatureGroup(['sigDailyReporter']);
   }
-  // Clear weekly tables
+  // Clear weekly tables + signatures
   if (panelId === 'panel-weekly') {
-    wkAct = []; wkIssue = []; wkNext = [];
+    wkAct = []; wkIssue = []; wkNext = []; wkTargets = [];
     localStorage.removeItem('crystal_wk_tables');
-    renderWkAct(); renderWkIssue(); renderWkNext();
+    renderWkAct(); renderWkIssue(); renderWkNext(); renderWkTarget();
+    clearSignatureGroup(['sigWkReporter', 'sigWkApprover']);
   }
-  // Clear monthly tables
+  // Clear monthly tables + signatures
   if (panelId === 'panel-monthly') {
-    moAct = []; moIssue = []; moNext = [];
+    moAct = []; moIssue = []; moNext = []; moTargets = [];
     localStorage.removeItem('crystal_mo_tables');
-    renderMoAct(); renderMoIssue(); renderMoNext();
+    renderMoAct(); renderMoIssue(); renderMoNext(); renderMoTarget();
+    clearSignatureGroup(['sigMoReporter', 'sigMoApprover']);
   }
   // Reset default date
   const today = localDate();
@@ -2540,6 +2822,8 @@ function init() {
   setupDailyPhotoDragDrop();
   renderDailyPhotoGrid();
   loadReportTables();
+  // Slight delay so canvas elements have rendered size
+  setTimeout(setupAllSignaturePads, 50);
 
   updateModelTag();
   updateSettingsBtnStatus();
