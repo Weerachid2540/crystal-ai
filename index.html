@@ -390,7 +390,11 @@
     .doc-type-grid, .boq-actions, .photo-uploader, .photo-thumb-del,
     .add-row-btn, .report-table .col-action, .report-table .del-row-btn,
     .signature-actions, .signature-hint,
-    .salary-toolbar { display: none !important; }
+    .salary-toolbar,
+    /* On Salary print: hide the calendar (recording tool) — keep only summary + signature */
+    #panel-salary .panel-title, #panel-salary .panel-desc,
+    #panel-salary .salary-calendar, #panel-salary .salary-cal-weekdays,
+    #panel-salary .salary-cal-grid { display: none !important; }
     /* Salary signature on print: small, right-aligned (under summary) */
     #panel-salary .section-card:has(#sigSalaryEmployee) { background: transparent !important; border: none !important; padding: 0 !important; page-break-inside: avoid; }
     #panel-salary .section-card:has(#sigSalaryEmployee) .section-card-title { display: none !important; }
