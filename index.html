@@ -258,6 +258,40 @@
     .logo-icon-wrap { width: 34px; height: 34px; }
   }
 
+  /* SALARY TRACKER (เงินเดือน + รายการรายเดือน) */
+  .salary-header { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .salary-header { grid-template-columns: 1fr; } }
+  .salary-section-card { background: var(--surface); border: 1px solid var(--border); border-left-width: 3px; border-radius: var(--radius); padding: 12px; margin-bottom: 10px; }
+  .salary-section-card:not(.deduction) { border-left-color: var(--green); }
+  .salary-section-card.deduction { border-left-color: var(--red); }
+  .salary-section-head { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .salary-num { font-family: var(--mono); color: var(--text3); font-size: 14px; font-weight: 700; min-width: 24px; }
+  .salary-type { background: var(--tag-bg); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 4px; font-family: var(--mono); font-size: 11px; cursor: pointer; }
+  .salary-section-card.deduction .salary-type { color: var(--red); border-color: var(--red); }
+  .salary-section-card:not(.deduction) .salary-type { color: var(--green); border-color: var(--green); }
+  .salary-section-name { flex: 1; min-width: 120px; padding: 6px 10px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-size: 13px; font-weight: 600; font-family: var(--font); }
+  .salary-section-note { flex: 2; min-width: 150px; padding: 6px 10px; background: var(--surface2); border: 1px solid var(--border); color: var(--text2); border-radius: 4px; font-size: 12px; font-family: var(--font); }
+  .salary-section-name:focus, .salary-section-note:focus { outline: none; border-color: var(--accent); }
+  .salary-table { font-size: 12px; }
+  .salary-subtotal { font-family: var(--mono); font-size: 12px; text-align: right; padding: 6px 8px; color: var(--text); }
+  .salary-section-card.deduction .salary-subtotal { color: var(--red); }
+  .salary-section-card:not(.deduction) .salary-subtotal { color: var(--green); }
+  .salary-section-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 10px; flex-wrap: wrap; }
+  .salary-section-subtotal { font-family: var(--mono); font-size: 13px; color: var(--text2); }
+  .salary-section-subtotal strong { font-size: 15px; }
+  .salary-section-card.deduction .salary-section-subtotal strong { color: var(--red); }
+  .salary-section-card:not(.deduction) .salary-section-subtotal strong { color: var(--green); }
+  .salary-empty { background: var(--surface); border: 2px dashed var(--border); border-radius: var(--radius); padding: 30px 16px; text-align: center; color: var(--text3); }
+  .salary-empty-actions { margin-top: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .salary-add-section-btn { display: block; width: 100%; padding: 12px; background: var(--surface2); border: 1px dashed var(--border); color: var(--text2); border-radius: var(--radius); cursor: pointer; font-size: 13px; margin-top: 8px; transition: all 0.15s; font-family: var(--font); }
+  .salary-add-section-btn:hover { border-color: var(--accent); color: var(--accent); border-style: solid; }
+  .salary-summary { background: var(--surface); border: 2px solid var(--accent); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
+  .salary-summary-title { font-size: 11px; color: var(--accent); font-family: var(--mono); text-transform: uppercase; margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+  .salary-summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-family: var(--mono); font-size: 13px; color: var(--text); }
+  .salary-summary-row.income span:last-child { color: var(--green); }
+  .salary-summary-row.deduction span:last-child { color: var(--red); }
+  .salary-summary-grand { display: flex; justify-content: space-between; padding: 12px 0 0; border-top: 2px solid var(--accent); margin-top: 8px; font-size: 20px; font-weight: 700; color: var(--accent); font-family: var(--mono); }
+
   /* SIGNATURE PADS (Reporter / Approver) */
   .signature-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 600px) { .signature-row { grid-template-columns: 1fr; } }
@@ -328,7 +362,13 @@
     .add-row-btn, .clear-all-btn, .del-row-btn, .result-toolbar, .field-error,
     .doc-type-grid, .boq-actions, .photo-uploader, .photo-thumb-del,
     .add-row-btn, .report-table .col-action, .report-table .del-row-btn,
-    .signature-actions, .signature-hint { display: none !important; }
+    .signature-actions, .signature-hint,
+    .salary-add-section-btn, .salary-empty, .salary-section-card .col-action,
+    .salary-section-foot .add-row-btn { display: none !important; }
+    .salary-section-card { background: white; border: 1px solid #999; border-left: 3px solid #888; color: black; page-break-inside: avoid; }
+    .salary-section-name, .salary-section-note, .salary-type, .salary-table input, .salary-table select { background: white; color: black; border: none; padding: 0 2px; }
+    .salary-summary { background: #fafafa; border: 2px solid #333; color: black; }
+    .salary-summary-title, .salary-summary-grand { color: black; }
     .signature-block { background: white; border: 1px solid #999; color: black; page-break-inside: avoid; }
     .signature-block-title, .signature-role { color: black; }
     .signature-canvas-wrap { background: white; border: 1px solid #999; }
@@ -392,6 +432,10 @@
       <div class="sidebar-item" onclick="switchTab('proc',this)" role="button" tabindex="0"><span class="icon">🛒</span><span data-i18n="nav_boq">จัดซื้อ / BOQ</span></div>
       <div class="sidebar-item" onclick="switchTab('vo',this)" role="button" tabindex="0"><span class="icon">📝</span>Variation Order</div>
     </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label" data-i18n="menu_personal">ส่วนตัว / Personal</div>
+      <div class="sidebar-item" onclick="switchTab('salary',this)" role="button" tabindex="0"><span class="icon">💰</span><span data-i18n="nav_salary">เงินเดือน / Salary</span></div>
+    </div>
     <div class="sidebar-bottom">
       <div class="sidebar-logo-wrap">
         <div class="sidebar-logo-card">
@@ -413,6 +457,7 @@
       <div class="tab" id="tab-monthly" onclick="switchTab('monthly')" role="tab">📊 <span data-i18n="tab_monthly">รายเดือน</span></div>
       <div class="tab" id="tab-proc" onclick="switchTab('proc')" role="tab">🛒 BOQ</div>
       <div class="tab" id="tab-vo" onclick="switchTab('vo')" role="tab">📝 VO</div>
+      <div class="tab" id="tab-salary" onclick="switchTab('salary')" role="tab">💰 <span data-i18n="tab_salary">เงินเดือน</span></div>
     </div>
 
     <!-- CHAT -->
@@ -867,6 +912,50 @@
       </div>
     </div>
 
+    <!-- SALARY TRACKER -->
+    <div class="panel" id="panel-salary">
+      <div class="form-panel">
+        <div>
+          <div class="panel-title" data-i18n="salary_title">💰 บันทึกเงินเดือน</div>
+          <div class="panel-desc" data-i18n="salary_desc">บันทึกตารางการทำงานและรายรับ-รายหัก ของแต่ละเดือน</div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="salary_header_title">ข้อมูลพื้นฐาน</div>
+          <div class="salary-header">
+            <div class="field"><label data-i18n="salary_lbl_month">เดือน (เช่น 04/69)</label>
+              <input id="salaryMonth" placeholder="04/69">
+            </div>
+            <div class="field"><label data-i18n="salary_lbl_base">เงินเดือนหลัก (Base Salary)</label>
+              <input id="salaryBaseSalary" type="number" step="0.01" placeholder="0">
+            </div>
+          </div>
+        </div>
+
+        <div id="salarySectionsContainer"></div>
+
+        <button type="button" class="salary-add-section-btn" onclick="addSalarySection('income')">
+          <span data-i18n="salary_add_section">+ เพิ่มหัวข้อ (รายรับ)</span>
+        </button>
+        <button type="button" class="salary-add-section-btn" onclick="addSalarySection('deduction')">
+          <span data-i18n="salary_add_deduction">+ เพิ่มหัวข้อ (รายหัก)</span>
+        </button>
+
+        <div class="salary-summary">
+          <div class="salary-summary-title" data-i18n="salary_summary">📊 สรุปยอด / Summary</div>
+          <div class="salary-summary-row"><span data-i18n="salary_base">เงินเดือนหลัก</span><span id="salaryBaseDisplay">0</span></div>
+          <div class="salary-summary-row income"><span data-i18n="salary_income_total">รายรับเพิ่มเติม (+)</span><span id="salaryIncomeDisplay">+0</span></div>
+          <div class="salary-summary-row deduction"><span data-i18n="salary_deduction_total">รายหัก (−)</span><span id="salaryDeductionDisplay">−0</span></div>
+          <div class="salary-summary-grand"><span data-i18n="salary_grand_total">รวมสุทธิ / Net Total</span><span id="salaryGrandTotal">0</span></div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
+          <button class="gen-btn" onclick="exportSalaryPDF()">📄 <span data-i18n="salary_export">Export PDF</span></button>
+          <button class="ghost-btn" onclick="loadSalaryExample()" data-i18n="salary_example">📋 ตัวอย่าง</button>
+          <button class="ghost-btn" onclick="clearSalary()" data-i18n="salary_clear">🗑 ล้างทั้งหมด</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -955,8 +1044,15 @@ const I18N = {
   mix: {
     brand_sub: 'AI Assistant — วิศวกรสนาม',
     online: 'ONLINE', offline: 'OFFLINE',
-    menu_main: 'เมนูหลัก', menu_doc: 'จัดซื้อ / Documents',
-    nav_chat: 'AI Chatbot', nav_daily: 'Report รายวัน', nav_weekly: 'Report รายสัปดาห์', nav_monthly: 'Report รายเดือน', nav_boq: 'จัดซื้อ / BOQ',
+    menu_main: 'เมนูหลัก', menu_doc: 'จัดซื้อ / Documents', menu_personal: 'ส่วนตัว / Personal',
+    nav_chat: 'AI Chatbot', nav_daily: 'Report รายวัน', nav_weekly: 'Report รายสัปดาห์', nav_monthly: 'Report รายเดือน', nav_boq: 'จัดซื้อ / BOQ', nav_salary: '💰 เงินเดือน / Salary',
+    tab_salary: 'เงินเดือน',
+    salary_title: '💰 บันทึกเงินเดือน', salary_desc: 'บันทึกตารางการทำงานและรายรับ-รายหัก ของแต่ละเดือน',
+    salary_header_title: 'ข้อมูลพื้นฐาน', salary_lbl_month: 'เดือน (เช่น 04/69)', salary_lbl_base: 'เงินเดือนหลัก',
+    salary_add_section: '+ เพิ่มหัวข้อ (รายรับ)', salary_add_deduction: '+ เพิ่มหัวข้อ (รายหัก)',
+    salary_summary: '📊 สรุปยอด / Summary', salary_base: 'เงินเดือนหลัก', salary_income_total: 'รายรับเพิ่มเติม (+)',
+    salary_deduction_total: 'รายหัก (−)', salary_grand_total: 'รวมสุทธิ / Net Total',
+    salary_export: 'Export PDF', salary_example: '📋 ตัวอย่าง', salary_clear: '🗑 ล้างทั้งหมด',
     tab_chat: 'AI Chat', tab_daily: 'รายวัน', tab_weekly: 'รายสัปดาห์', tab_monthly: 'รายเดือน',
     clear_chat: '🗑 Clear Chat', generating: 'AI กำลังสร้าง...',
     daily_title: '📋 Daily Report', daily_desc: 'กรอกข้อมูลหน้างาน แล้วให้ AI สร้าง Report ให้อัตโนมัติ',
@@ -1019,8 +1115,15 @@ const I18N = {
   th: {
     brand_sub: 'ผู้ช่วย AI — วิศวกรสนาม',
     online: 'ออนไลน์', offline: 'ออฟไลน์',
-    menu_main: 'เมนูหลัก', menu_doc: 'จัดซื้อ / เอกสาร',
-    nav_chat: 'แชท AI', nav_daily: 'รายงานรายวัน', nav_weekly: 'รายงานรายสัปดาห์', nav_monthly: 'รายงานรายเดือน', nav_boq: 'จัดซื้อ / รายการวัสดุ',
+    menu_main: 'เมนูหลัก', menu_doc: 'จัดซื้อ / เอกสาร', menu_personal: 'ส่วนตัว',
+    nav_chat: 'แชท AI', nav_daily: 'รายงานรายวัน', nav_weekly: 'รายงานรายสัปดาห์', nav_monthly: 'รายงานรายเดือน', nav_boq: 'จัดซื้อ / รายการวัสดุ', nav_salary: '💰 เงินเดือน',
+    tab_salary: 'เงินเดือน',
+    salary_title: '💰 บันทึกเงินเดือน', salary_desc: 'บันทึกตารางการทำงานและรายรับ-รายหักของแต่ละเดือน',
+    salary_header_title: 'ข้อมูลพื้นฐาน', salary_lbl_month: 'เดือน (เช่น 04/69)', salary_lbl_base: 'เงินเดือนหลัก',
+    salary_add_section: '+ เพิ่มหัวข้อ (รายรับ)', salary_add_deduction: '+ เพิ่มหัวข้อ (รายหัก)',
+    salary_summary: '📊 สรุปยอด', salary_base: 'เงินเดือนหลัก', salary_income_total: 'รายรับเพิ่มเติม (+)',
+    salary_deduction_total: 'รายหัก (−)', salary_grand_total: 'รวมสุทธิ',
+    salary_export: 'ส่งออก PDF', salary_example: '📋 ตัวอย่าง', salary_clear: '🗑 ล้างทั้งหมด',
     tab_chat: 'แชท AI', tab_daily: 'รายวัน', tab_weekly: 'รายสัปดาห์', tab_monthly: 'รายเดือน',
     clear_chat: '🗑 ล้างประวัติแชท', generating: 'AI กำลังสร้าง...',
     daily_title: '📋 รายงานรายวัน', daily_desc: 'กรอกข้อมูลหน้างาน แล้วให้ AI สร้างรายงานให้อัตโนมัติ',
@@ -1083,7 +1186,15 @@ const I18N = {
   en: {
     brand_sub: 'AI Assistant — Field Engineer',
     online: 'ONLINE', offline: 'OFFLINE',
-    menu_main: 'MAIN MENU', menu_doc: 'PROCUREMENT / DOCS',
+    menu_main: 'MAIN MENU', menu_doc: 'PROCUREMENT / DOCS', menu_personal: 'PERSONAL',
+    nav_salary: '💰 Salary',
+    tab_salary: 'Salary',
+    salary_title: '💰 Salary Tracker', salary_desc: 'Track your monthly salary, OT, allowances, and deductions',
+    salary_header_title: 'Basic Info', salary_lbl_month: 'Month (e.g. 04/69)', salary_lbl_base: 'Base Salary',
+    salary_add_section: '+ Add Section (Income)', salary_add_deduction: '+ Add Section (Deduction)',
+    salary_summary: '📊 Summary', salary_base: 'Base Salary', salary_income_total: 'Additional Income (+)',
+    salary_deduction_total: 'Deductions (−)', salary_grand_total: 'Net Total',
+    salary_export: 'Export PDF', salary_example: '📋 Example', salary_clear: '🗑 Clear All',
     nav_chat: 'AI Chatbot', nav_daily: 'Daily Report', nav_weekly: 'Weekly Report', nav_monthly: 'Monthly Report', nav_boq: 'Procurement / BOQ',
     tab_chat: 'AI Chat', tab_daily: 'Daily', tab_weekly: 'Weekly', tab_monthly: 'Monthly',
     clear_chat: '🗑 Clear Chat', generating: 'AI is generating...',
@@ -2057,6 +2168,267 @@ function saveReportTablesDraft(panelId) {
   } catch (e) {}
 }
 
+// ============================================================
+// SALARY TRACKER (เงินเดือน + รายการ + คำนวณยอดรวม)
+// Free-form sections: each can be income or deduction with multiple items
+// ============================================================
+let salaryData = { month: '', baseSalary: '', sections: [] };
+let salaryIdCounter = 0;
+function _salaryNewId() { return ++salaryIdCounter; }
+function _fmtMoney(n) {
+  const v = Number(n);
+  if (!isFinite(v)) return '0';
+  return v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function saveSalary() {
+  try { localStorage.setItem('crystal_salary', JSON.stringify(salaryData)); } catch (e) {}
+}
+
+function addSalarySection(type) {
+  type = type || 'income';
+  salaryData.sections.push({
+    id: _salaryNewId(),
+    type,
+    name: '',
+    note: '',
+    items: [{ id: _salaryNewId(), label: '', rate: '', qty: 1 }]
+  });
+  renderSalary();
+  saveSalary();
+}
+function delSalarySection(sectionId) {
+  if (!confirm(currentLang === 'en' ? 'Delete this section?' : 'ลบหัวข้อนี้?')) return;
+  salaryData.sections = salaryData.sections.filter(s => s.id !== sectionId);
+  renderSalary();
+  saveSalary();
+}
+function addSalaryItem(sectionId) {
+  const sec = salaryData.sections.find(s => s.id === sectionId);
+  if (!sec) return;
+  sec.items.push({ id: _salaryNewId(), label: '', rate: '', qty: 1 });
+  renderSalary();
+  saveSalary();
+}
+function delSalaryItem(sectionId, itemId) {
+  const sec = salaryData.sections.find(s => s.id === sectionId);
+  if (!sec) return;
+  sec.items = sec.items.filter(i => i.id !== itemId);
+  renderSalary();
+  saveSalary();
+}
+function updateSalarySection(sectionId, key, value) {
+  const sec = salaryData.sections.find(s => s.id === sectionId);
+  if (!sec) return;
+  sec[key] = value;
+  if (key === 'type') renderSalary();
+  else { saveSalary(); recalcSalary(); }
+}
+function updateSalaryItem(sectionId, itemId, key, value) {
+  const sec = salaryData.sections.find(s => s.id === sectionId);
+  if (!sec) return;
+  const item = sec.items.find(i => i.id === itemId);
+  if (!item) return;
+  item[key] = value;
+  saveSalary();
+  // Update subtotal cells inline (no full re-render to keep focus)
+  if (key === 'rate' || key === 'qty') {
+    const tr = document.querySelector(`tr[data-salary-item="${itemId}"]`);
+    if (tr) {
+      const sub = (parseFloat(item.rate) || 0) * (parseFloat(item.qty) || 0);
+      const cell = tr.querySelector('.salary-subtotal');
+      if (cell) cell.textContent = _fmtMoney(sub);
+    }
+    recalcSalary();
+  }
+}
+
+function recalcSalary() {
+  const base = parseFloat(salaryData.baseSalary) || 0;
+  let income = 0, deduction = 0;
+  salaryData.sections.forEach(sec => {
+    const subtotal = sec.items.reduce((s, it) => s + (parseFloat(it.rate) || 0) * (parseFloat(it.qty) || 0), 0);
+    if (sec.type === 'deduction') deduction += subtotal; else income += subtotal;
+    const subEl = document.querySelector(`[data-section-subtotal="${sec.id}"]`);
+    if (subEl) subEl.textContent = (sec.type === 'deduction' ? '−' : '+') + _fmtMoney(subtotal);
+  });
+  const grand = base + income - deduction;
+  const baseEl = document.getElementById('salaryBaseDisplay');
+  const incEl = document.getElementById('salaryIncomeDisplay');
+  const dedEl = document.getElementById('salaryDeductionDisplay');
+  const grandEl = document.getElementById('salaryGrandTotal');
+  if (baseEl) baseEl.textContent = _fmtMoney(base);
+  if (incEl) incEl.textContent = '+' + _fmtMoney(income);
+  if (dedEl) dedEl.textContent = '−' + _fmtMoney(deduction);
+  if (grandEl) grandEl.textContent = _fmtMoney(grand);
+}
+
+function renderSalary() {
+  const container = document.getElementById('salarySectionsContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!salaryData.sections.length) {
+    const empty = document.createElement('div');
+    empty.className = 'salary-empty';
+    empty.innerHTML = currentLang === 'en'
+      ? '<div>No items yet. Click "+ Add Section" below or load the example to start.</div>'
+      : '<div>ยังไม่มีรายการ — กดปุ่ม "+ เพิ่มหัวข้อ" ด้านล่าง หรือกด "ตัวอย่าง" เพื่อโหลดข้อมูลตัวอย่าง</div>';
+    container.appendChild(empty);
+    recalcSalary();
+    return;
+  }
+  salaryData.sections.forEach((sec, idx) => {
+    const card = document.createElement('div');
+    card.className = 'salary-section-card' + (sec.type === 'deduction' ? ' deduction' : '');
+    const itemRows = sec.items.map((it, ii) => {
+      const sub = (parseFloat(it.rate) || 0) * (parseFloat(it.qty) || 0);
+      return `
+        <tr data-salary-item="${it.id}">
+          <td class="col-num">${ii + 1}</td>
+          <td><input type="text" data-key="label" value="${escapeHtml(it.label || '')}" placeholder="${currentLang === 'en' ? 'Item label' : 'ชื่อรายการย่อย'}"></td>
+          <td><input type="number" step="0.01" data-key="rate" value="${escapeHtml(String(it.rate ?? ''))}" placeholder="0"></td>
+          <td><input type="number" step="0.01" data-key="qty" value="${escapeHtml(String(it.qty ?? ''))}" placeholder="0"></td>
+          <td class="salary-subtotal">${_fmtMoney(sub)}</td>
+          <td class="col-action"><button type="button" class="del-row-btn" data-del-item="${it.id}" aria-label="Remove">×</button></td>
+        </tr>`;
+    }).join('');
+    card.innerHTML = `
+      <div class="salary-section-head">
+        <span class="salary-num">${idx + 1}.</span>
+        <select class="salary-type" data-key="type">
+          <option value="income" ${sec.type === 'income' ? 'selected' : ''}>${currentLang === 'en' ? '+ Income' : '+ รายรับ'}</option>
+          <option value="deduction" ${sec.type === 'deduction' ? 'selected' : ''}>${currentLang === 'en' ? '− Deduction' : '− รายหัก'}</option>
+        </select>
+        <input class="salary-section-name" type="text" data-key="name" value="${escapeHtml(sec.name || '')}" placeholder="${currentLang === 'en' ? 'Section name (e.g. OT, Travel)' : 'ชื่อหัวข้อ เช่น OT, ค่าเดินทาง'}">
+        <input class="salary-section-note" type="text" data-key="note" value="${escapeHtml(sec.note || '')}" placeholder="${currentLang === 'en' ? 'Note (optional)' : 'หมายเหตุ (optional)'}">
+        <button type="button" class="del-row-btn" data-del-section="${sec.id}" aria-label="Remove section" title="${currentLang === 'en' ? 'Remove section' : 'ลบหัวข้อ'}">×</button>
+      </div>
+      <div class="report-table-wrap">
+        <table class="report-table salary-table">
+          <thead><tr>
+            <th class="col-num">#</th>
+            <th>${currentLang === 'en' ? 'Item' : 'รายการย่อย'}</th>
+            <th class="col-mhr">${currentLang === 'en' ? 'Rate' : 'อัตรา'}</th>
+            <th class="col-mhr">${currentLang === 'en' ? 'Qty' : 'จำนวน'}</th>
+            <th class="col-mhr">${currentLang === 'en' ? 'Subtotal' : 'รวม'}</th>
+            <th class="col-action"></th>
+          </tr></thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+      </div>
+      <div class="salary-section-foot">
+        <button type="button" class="add-row-btn" data-add-item="${sec.id}">${currentLang === 'en' ? '+ Add item' : '+ เพิ่มรายการย่อย'}</button>
+        <div class="salary-section-subtotal">${currentLang === 'en' ? 'Subtotal:' : 'รวม:'} <strong data-section-subtotal="${sec.id}">0</strong></div>
+      </div>`;
+
+    // Wire events for this card
+    card.querySelectorAll('[data-key]').forEach(el => {
+      const key = el.dataset.key;
+      const rowTr = el.closest('tr[data-salary-item]');
+      const handler = () => {
+        if (rowTr) updateSalaryItem(sec.id, parseInt(rowTr.dataset.salaryItem), key, el.value);
+        else updateSalarySection(sec.id, key, el.value);
+      };
+      el.addEventListener('input', handler);
+      el.addEventListener('change', handler);
+    });
+    const delSecBtn = card.querySelector('[data-del-section]');
+    if (delSecBtn) delSecBtn.addEventListener('click', () => delSalarySection(sec.id));
+    const addItemBtn = card.querySelector('[data-add-item]');
+    if (addItemBtn) addItemBtn.addEventListener('click', () => addSalaryItem(sec.id));
+    card.querySelectorAll('[data-del-item]').forEach(btn => {
+      btn.addEventListener('click', () => delSalaryItem(sec.id, parseInt(btn.dataset.delItem)));
+    });
+    container.appendChild(card);
+  });
+  recalcSalary();
+}
+
+function clearSalary() {
+  if (!confirm(currentLang === 'en' ? 'Clear all salary data?' : 'ล้างข้อมูลเงินเดือนทั้งหมด?')) return;
+  salaryData = { month: '', baseSalary: '', sections: [] };
+  const m = document.getElementById('salaryMonth'); if (m) m.value = '';
+  const b = document.getElementById('salaryBaseSalary'); if (b) b.value = '';
+  localStorage.removeItem('crystal_salary');
+  renderSalary();
+}
+
+function exportSalaryPDF() {
+  // Switch to salary panel first so print captures it
+  switchTab('salary');
+  // Slight delay to let the panel become visible
+  setTimeout(() => {
+    toast(currentLang === 'en' ? 'Tip: choose "Save as PDF" in the print dialog' : 'เคล็ดลับ: เลือก "Save as PDF" ในหน้าต่าง Print', 'info');
+    window.print();
+  }, 100);
+}
+
+function loadSalaryExample() {
+  if (salaryData.sections.length && !confirm(currentLang === 'en' ? 'Replace current data with example?' : 'เขียนทับข้อมูลปัจจุบันด้วยตัวอย่าง?')) return;
+  salaryData = {
+    month: '04/69',
+    baseSalary: 19500,
+    sections: [
+      {
+        id: _salaryNewId(), type: 'income', name: 'OT', note: '11 วัน (1, 4, 11, 18, 25)',
+        items: [
+          { id: _salaryNewId(), label: 'OT 600/วัน', rate: 600, qty: 4 },
+          { id: _salaryNewId(), label: 'OT 1000/วัน', rate: 1000, qty: 1 }
+        ]
+      },
+      {
+        id: _salaryNewId(), type: 'income', name: 'ค่าเดินทาง', note: '(นน12)(มีตติ้ง1)(บางแวก8)(ฮอนด้า6)(ท่ามหาราช3)',
+        items: [
+          { id: _salaryNewId(), label: 'นน', rate: 150, qty: 12 },
+          { id: _salaryNewId(), label: 'มีตติ้ง', rate: 300, qty: 1 },
+          { id: _salaryNewId(), label: 'บางแวก', rate: 250, qty: 8 },
+          { id: _salaryNewId(), label: 'ฮอนด้า', rate: 250, qty: 6 },
+          { id: _salaryNewId(), label: 'ท่ามหาราช', rate: 200, qty: 3 }
+        ]
+      },
+      {
+        id: _salaryNewId(), type: 'income', name: 'เอกสาร', note: '',
+        items: [{ id: _salaryNewId(), label: 'ค่าเอกสาร', rate: 500, qty: 1 }]
+      },
+      {
+        id: _salaryNewId(), type: 'deduction', name: 'หักประกันสังคม', note: '',
+        items: [{ id: _salaryNewId(), label: 'ประกันสังคม', rate: 875, qty: 1 }]
+      }
+    ]
+  };
+  document.getElementById('salaryMonth').value = salaryData.month;
+  document.getElementById('salaryBaseSalary').value = salaryData.baseSalary;
+  renderSalary();
+  saveSalary();
+}
+
+function setupSalaryHeaderInputs() {
+  const m = document.getElementById('salaryMonth');
+  const b = document.getElementById('salaryBaseSalary');
+  if (m) {
+    m.addEventListener('input', () => { salaryData.month = m.value; saveSalary(); });
+  }
+  if (b) {
+    b.addEventListener('input', () => { salaryData.baseSalary = b.value; recalcSalary(); saveSalary(); });
+  }
+}
+
+function loadSalary() {
+  const data = safeJsonParse(localStorage.getItem('crystal_salary'), null);
+  if (data && typeof data === 'object') {
+    salaryData = data;
+    salaryData.sections = salaryData.sections || [];
+    salaryData.sections.forEach(sec => {
+      if (sec.id > salaryIdCounter) salaryIdCounter = sec.id;
+      (sec.items || []).forEach(it => { if (it.id > salaryIdCounter) salaryIdCounter = it.id; });
+    });
+  }
+  const m = document.getElementById('salaryMonth'); if (m) m.value = salaryData.month || '';
+  const b = document.getElementById('salaryBaseSalary'); if (b) b.value = salaryData.baseSalary || '';
+  setupSalaryHeaderInputs();
+  renderSalary();
+}
+
 function loadReportTables() {
   const wk = safeJsonParse(localStorage.getItem('crystal_wk_tables'), null);
   if (wk) {
@@ -2855,6 +3227,7 @@ function init() {
   setupDailyPhotoDragDrop();
   renderDailyPhotoGrid();
   loadReportTables();
+  loadSalary();
   // Slight delay so canvas elements have rendered size
   setTimeout(setupAllSignaturePads, 50);
 
