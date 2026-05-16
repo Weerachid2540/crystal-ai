@@ -259,6 +259,9 @@
   }
 
   /* SALARY TRACKER (Calendar-based) */
+  /* Print-only company header (hidden on screen, shown on print) */
+  .salary-print-header { display: none; }
+
   .salary-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
   .salary-month-label { font-size: 15px; font-weight: 700; color: var(--accent); font-family: var(--mono); padding: 0 16px; min-width: 180px; text-align: center; }
   .salary-calendar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; }
@@ -388,6 +391,14 @@
     .add-row-btn, .report-table .col-action, .report-table .del-row-btn,
     .signature-actions, .signature-hint,
     .salary-toolbar { display: none !important; }
+    /* Print-only company header for salary PDF */
+    .salary-print-header { display: flex !important; align-items: center; gap: 14px;
+      border-bottom: 2px solid #333; padding-bottom: 12px; margin-bottom: 14px; }
+    .salary-print-logo { width: 70px; height: 70px; object-fit: contain; flex-shrink: 0; }
+    .salary-print-info { flex: 1; }
+    .salary-print-title { font-size: 18px; font-weight: 700; color: black; letter-spacing: 0.5px; }
+    .salary-print-sub { font-size: 11px; color: #666; font-family: 'IBM Plex Mono', monospace; margin-top: 2px; letter-spacing: 1px; }
+    .salary-print-period { font-size: 13px; font-weight: 600; color: #333; margin-top: 6px; }
     .salary-calendar { background: white; border: 1px solid #999; color: black; padding: 4px; }
     .salary-cal-weekdays > div { color: #333; }
     .salary-day { background: #fafafa; border-color: #ccc; color: black; min-height: 50px; }
@@ -945,6 +956,17 @@
     <!-- SALARY TRACKER (Calendar-based) -->
     <div class="panel" id="panel-salary">
       <div class="form-panel">
+
+        <!-- Print-only company header (logo + name + month) -->
+        <div class="salary-print-header">
+          <img class="salary-print-logo" id="salaryPrintLogo" alt="Crystal Engineering Corporation">
+          <div class="salary-print-info">
+            <div class="salary-print-title">Crystal Engineering Corporation</div>
+            <div class="salary-print-sub">SALARY STATEMENT / สลิปเงินเดือน</div>
+            <div class="salary-print-period" id="salaryPrintPeriod">—</div>
+          </div>
+        </div>
+
         <div>
           <div class="panel-title" data-i18n="salary_title">💰 บันทึกเงินเดือน</div>
           <div class="panel-desc" data-i18n="salary_desc">คลิกที่วันในปฏิทินเพื่อเลือกไซต์ที่ไป — AI คำนวณเงินเดือนให้อัตโนมัติ</div>
@@ -969,6 +991,24 @@
           <div class="salary-summary-title">📊 <span id="salarySummaryMonthLabel">สรุปเดือน</span></div>
           <div id="salarySummaryBody"></div>
           <div class="salary-summary-grand"><span data-i18n="salary_grand_total">รวมสุทธิ / Net Total</span><span id="salaryGrandTotal">0</span></div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-title" data-i18n="salary_sig_title">✍️ ลายเซ็นผู้รับเงินเดือน / Employee Signature</div>
+          <div class="signature-row" style="grid-template-columns: 1fr">
+            <div class="signature-block">
+              <div class="signature-block-title" data-i18n="salary_sig_label">Signed by Employee</div>
+              <div class="signature-canvas-wrap" data-sig-id="sigSalaryEmployee">
+                <canvas class="signature-canvas" id="sigSalaryEmployee"></canvas>
+                <div class="signature-hint" data-i18n="sig_hint">เซ็นที่นี่</div>
+              </div>
+              <div class="signature-actions">
+                <button type="button" onclick="clearSignature('sigSalaryEmployee')" data-i18n="sig_clear">🗑 ล้าง</button>
+                <span class="signature-role">(Employee)</span>
+              </div>
+              <input class="signature-name" id="sigSalaryEmployee_name" placeholder="ชื่อ-นามสกุล">
+            </div>
+          </div>
         </div>
 
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
@@ -1142,6 +1182,8 @@ const I18N = {
     salary_title: '💰 บันทึกเงินเดือน', salary_desc: 'คลิกที่วันในปฏิทินเพื่อเลือกไซต์ที่ไป — AI คำนวณเงินเดือนให้อัตโนมัติ',
     salary_today: '📅 วันนี้', salary_settings: '⚙️ ตั้งค่า', salary_grand_total: 'รวมสุทธิ / Net Total',
     salary_export: 'Export PDF', salary_clear_month: '🗑 ล้างเดือนนี้',
+    salary_sig_title: '✍️ ลายเซ็นผู้รับเงินเดือน / Employee Signature',
+    salary_sig_label: 'Signed by Employee',
     salary_sites_q: '📍 ไปที่ไหนวันนี้?', salary_ot_q: '⏰ OT วันนี้?',
     salary_day_clear: '🗑 ล้างวันนี้', btn_save: '💾 บันทึก', btn_cancel: 'ยกเลิก',
     salary_settings_title: '⚙️ ตั้งค่ารายการเงินเดือน', salary_base_label: '💵 เงินเดือนหลัก (Base Salary)',
@@ -1218,6 +1260,8 @@ const I18N = {
     salary_title: '💰 บันทึกเงินเดือน', salary_desc: 'คลิกที่วันในปฏิทินเพื่อเลือกไซต์ที่ไป AI จะคำนวณเงินเดือนให้อัตโนมัติ',
     salary_today: '📅 วันนี้', salary_settings: '⚙️ ตั้งค่า', salary_grand_total: 'รวมสุทธิ',
     salary_export: 'ส่งออก PDF', salary_clear_month: '🗑 ล้างเดือนนี้',
+    salary_sig_title: '✍️ ลายเซ็นผู้รับเงินเดือน',
+    salary_sig_label: 'ผู้รับเงินเดือน',
     salary_sites_q: '📍 ไปที่ไหนวันนี้?', salary_ot_q: '⏰ OT วันนี้?',
     salary_day_clear: '🗑 ล้างวันนี้', btn_save: '💾 บันทึก', btn_cancel: 'ยกเลิก',
     salary_settings_title: '⚙️ ตั้งค่ารายการเงินเดือน', salary_base_label: '💵 เงินเดือนหลัก',
@@ -1294,6 +1338,8 @@ const I18N = {
     salary_title: '💰 Salary Tracker', salary_desc: 'Click a date in the calendar to log site visits — AI computes everything else',
     salary_today: '📅 Today', salary_settings: '⚙️ Settings', salary_grand_total: 'Net Total',
     salary_export: 'Export PDF', salary_clear_month: '🗑 Clear month',
+    salary_sig_title: '✍️ Employee Signature',
+    salary_sig_label: 'Signed by Employee',
     salary_sites_q: '📍 Where did you go today?', salary_ot_q: '⏰ Any OT today?',
     salary_day_clear: '🗑 Clear day', btn_save: '💾 Save', btn_cancel: 'Cancel',
     salary_settings_title: '⚙️ Salary Settings', salary_base_label: '💵 Base Salary',
@@ -2583,6 +2629,9 @@ function recalcSalaryMonth() {
   const monthData = salaryCalendar[monthKey] || {};
   const labelEl = document.getElementById('salarySummaryMonthLabel');
   if (labelEl) labelEl.textContent = (currentLang === 'en' ? 'Summary — ' : 'สรุปเดือน ') + _salaryMonthLabel(year, month);
+  // Update print-only period
+  const printPeriod = document.getElementById('salaryPrintPeriod');
+  if (printPeriod) printPeriod.textContent = (currentLang === 'en' ? 'Period: ' : 'ประจำเดือน: ') + _salaryMonthLabel(year, month);
 
   const siteCounts = new Map();
   const otCounts = new Map();
@@ -2950,7 +2999,7 @@ function loadReportTables() {
 // SIGNATURE PADS — draw with mouse / finger / stylus
 // Stored as PNG dataURL in localStorage; restored on init.
 // ============================================================
-const SIGNATURE_IDS = ['sigDailyApprover', 'sigWkApprover', 'sigMoApprover'];
+const SIGNATURE_IDS = ['sigDailyApprover', 'sigWkApprover', 'sigMoApprover', 'sigSalaryEmployee'];
 
 function _sigStorageKey(id) { return 'crystal_sig_' + id; }
 
@@ -3740,6 +3789,10 @@ function init() {
   renderDailyPhotoGrid();
   loadReportTables();
   loadSalary();
+  // Reuse sidebar logo for salary print header (avoid duplicating ~166KB base64)
+  const sidebarLogoEl = document.querySelector('.sidebar-logo-img');
+  const printLogoEl = document.getElementById('salaryPrintLogo');
+  if (sidebarLogoEl && printLogoEl) printLogoEl.src = sidebarLogoEl.src;
   // Slight delay so canvas elements have rendered size
   setTimeout(setupAllSignaturePads, 50);
 
