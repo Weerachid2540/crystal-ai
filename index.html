@@ -1195,6 +1195,25 @@
   .proj-timeline-wrap { padding: 12px 16px; }
   .proj-body-grid { padding: 12px 16px 16px; }
 }
+
+/* Beam type sub-tabs */
+.beam-type-tabs { display:flex; gap:6px; padding:10px 16px 0; flex-wrap:wrap; }
+.beam-ttab {
+  background: var(--surface2); border:1px solid var(--border); border-radius:6px;
+  padding:5px 12px; font-size:12px; font-weight:600; color:var(--text2);
+  cursor:pointer; font-family:var(--font); transition:all 0.2s;
+}
+.beam-ttab.active { background:var(--accent); border-color:var(--accent); color:#000; }
+.btype-panel { display:none; }
+.btype-panel.active { display:block; }
+.cont-form { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:12px 16px 0; }
+.span-inputs-row {
+  display:grid; grid-template-columns:auto 1fr 1fr; gap:8px;
+  align-items:center; padding:6px 16px; border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.span-inputs-row .span-label { font-size:12px; font-weight:700; color:var(--accent); min-width:60px; }
+.span-inputs-row .field { margin:0; }
+.span-inputs-row label { font-size:11px; }
 </style>
 </head>
 <body data-view="auth">
@@ -1305,23 +1324,56 @@
         </div>
         <!-- Beam -->
         <div id="dashStruct-beam" class="dash-struct-panel active">
-          <div class="struct-form">
-            <div class="field"><label>b (mm)</label><input id="bm_b" type="number" value="300" /></div>
-            <div class="field"><label>h (mm)</label><input id="bm_h" type="number" value="500" /></div>
-            <div class="field"><label>L (m)</label><input id="bm_L" type="number" value="4" /></div>
-            <div class="field"><label>w (kN/m)</label><input id="bm_w" type="number" value="20" /></div>
-            <div class="field"><label>fc' (MPa)</label><input id="bm_fc" type="number" value="24" /></div>
-            <div class="field"><label>fy (MPa)</label><input id="bm_fy" type="number" value="400" /></div>
+          <div class="beam-type-tabs" id="beamTypeTabs">
+            <button class="beam-ttab active" onclick="switchBeamType('s1',this)">📏 1 ช่วง</button>
+            <button class="beam-ttab" onclick="switchBeamType('c2',this)">2 ช่วง</button>
+            <button class="beam-ttab" onclick="switchBeamType('c3',this)">3 ช่วง</button>
+            <button class="beam-ttab" onclick="switchBeamType('c4',this)">4 ช่วง</button>
+            <button class="beam-ttab" onclick="switchBeamType('c5',this)">5 ช่วง</button>
           </div>
-          <div class="struct-actions">
-            <button class="gen-btn" onclick="calcBeam()">คำนวณ Beam</button>
-            <button class="ghost-btn" onclick="resetStructForm('beam')">รีเซ็ต</button>
+
+          <!-- panel: single span (existing form) -->
+          <div id="btype-s1" class="btype-panel active">
+            <div class="struct-form">
+              <div class="field"><label>b (mm)</label><input id="bm_b" type="number" value="300" /></div>
+              <div class="field"><label>h (mm)</label><input id="bm_h" type="number" value="500" /></div>
+              <div class="field"><label>L (m)</label><input id="bm_L" type="number" value="4" /></div>
+              <div class="field"><label>w (kN/m)</label><input id="bm_w" type="number" value="20" /></div>
+              <div class="field"><label>fc' (MPa)</label><input id="bm_fc" type="number" value="24" /></div>
+              <div class="field"><label>fy (MPa)</label><input id="bm_fy" type="number" value="400" /></div>
+            </div>
+            <div class="struct-actions">
+              <button class="gen-btn" onclick="calcBeam()">คำนวณ Beam</button>
+              <button class="ghost-btn" onclick="resetStructForm('beam')">รีเซ็ต</button>
+            </div>
+            <div class="struct-result" id="bm_result"></div>
+            <div class="struct-diagrams" id="bm_diagrams">
+              <div class="diag-card"><div class="diag-title">FBD</div><canvas class="diag-canvas" id="bm_fbd" width="700" height="180"></canvas></div>
+              <div class="diag-card"><div class="diag-title">SFD</div><canvas class="diag-canvas" id="bm_sfd" width="700" height="180"></canvas></div>
+              <div class="diag-card"><div class="diag-title">BMD</div><canvas class="diag-canvas" id="bm_bmd" width="700" height="180"></canvas></div>
+            </div>
           </div>
-          <div class="struct-result" id="bm_result"></div>
-          <div class="struct-diagrams" id="bm_diagrams">
-            <div class="diag-card"><div class="diag-title">FBD</div><canvas class="diag-canvas" id="bm_fbd" width="700" height="180"></canvas></div>
-            <div class="diag-card"><div class="diag-title">SFD</div><canvas class="diag-canvas" id="bm_sfd" width="700" height="180"></canvas></div>
-            <div class="diag-card"><div class="diag-title">BMD</div><canvas class="diag-canvas" id="bm_bmd" width="700" height="180"></canvas></div>
+
+          <!-- panel: continuous beam (2-5 spans, shared dynamic form) -->
+          <div id="btype-cont" class="btype-panel" style="display:none">
+            <div class="struct-form cont-form">
+              <div class="field"><label>b (mm)</label><input id="cb_b" type="number" value="300"/></div>
+              <div class="field"><label>h (mm)</label><input id="cb_h" type="number" value="500"/></div>
+              <div class="field"><label>fc' (MPa)</label><input id="cb_fc" type="number" value="24"/></div>
+              <div class="field"><label>fy (MPa)</label><input id="cb_fy" type="number" value="400"/></div>
+            </div>
+            <div id="cb_span_inputs" style="margin:10px 0">
+              <!-- span inputs injected by JS -->
+            </div>
+            <div class="struct-actions">
+              <button class="gen-btn" onclick="calcContBeam()">คำนวณคานต่อเนื่อง</button>
+              <button class="ghost-btn" onclick="resetContBeam()">รีเซ็ต</button>
+            </div>
+            <div class="struct-result" id="cb_result"></div>
+            <div class="struct-diagrams" id="cb_diagrams">
+              <div class="diag-card"><div class="diag-title">SFD — Shear Force Diagram</div><canvas class="diag-canvas" id="cb_sfd" width="700" height="160"></canvas></div>
+              <div class="diag-card"><div class="diag-title">BMD — Bending Moment Diagram</div><canvas class="diag-canvas" id="cb_bmd" width="700" height="160"></canvas></div>
+            </div>
           </div>
         </div>
         <!-- Column -->
@@ -8339,6 +8391,261 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ─── Beam type switcher ───
+let _beamSpanCount = 1;
+function switchBeamType(type, btn) {
+  document.querySelectorAll('#beamTypeTabs .beam-ttab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.btype-panel').forEach(p => { p.style.display='none'; p.classList.remove('active'); });
+  if (type === 's1') {
+    _beamSpanCount = 1;
+    const p = document.getElementById('btype-s1');
+    p.style.display='block'; p.classList.add('active');
+  } else {
+    _beamSpanCount = parseInt(type.replace('c',''));
+    const p = document.getElementById('btype-cont');
+    p.style.display='block'; p.classList.add('active');
+    _renderContSpanInputs(_beamSpanCount);
+    document.getElementById('cb_result').innerHTML = '';
+    document.getElementById('cb_diagrams').classList.remove('show');
+  }
+}
+
+function _renderContSpanInputs(n) {
+  const box = document.getElementById('cb_span_inputs');
+  let html = `<div style="padding:8px 16px 4px;font-size:12px;color:var(--text2);font-weight:700">รายละเอียดแต่ละช่วงคาน</div>`;
+  for (let i = 1; i <= n; i++) {
+    html += `<div class="span-inputs-row">
+      <span class="span-label">ช่วงที่ ${i}</span>
+      <div class="field"><label>L${i} (m)</label><input id="cb_L${i}" type="number" value="4" step="0.5" min="0.5"></div>
+      <div class="field"><label>w${i} (kN/m)</label><input id="cb_w${i}" type="number" value="20" step="1" min="0"></div>
+    </div>`;
+  }
+  box.innerHTML = html;
+}
+
+function resetContBeam() {
+  _renderContSpanInputs(_beamSpanCount);
+  document.getElementById('cb_result').innerHTML = '';
+  document.getElementById('cb_diagrams').classList.remove('show');
+  const cvS = document.getElementById('cb_sfd');
+  const cvB = document.getElementById('cb_bmd');
+  if (cvS) cvS.getContext('2d').clearRect(0,0,cvS.width,cvS.height);
+  if (cvB) cvB.getContext('2d').clearRect(0,0,cvB.width,cvB.height);
+}
+
+// ─── Three-Moment Equation (Clapeyron) ───
+// Returns support moments M[0..n] where M[0]=M[n]=0 (simply supported ends)
+function _threeMonumentEq(spans) {
+  const n = spans.length;
+  if (n === 0) return [0];
+  const M = new Array(n + 1).fill(0); // M[0]=M[n]=0
+  if (n === 1) return M;
+
+  // Build tridiagonal system for interior moments M[1]..M[n-1]
+  const size = n - 1;
+  const a = new Array(size).fill(0); // sub-diagonal
+  const b2 = new Array(size).fill(0); // main diagonal
+  const c = new Array(size).fill(0); // super-diagonal
+  const d = new Array(size).fill(0); // RHS
+
+  for (let i = 0; i < size; i++) {
+    const k = i + 1; // interior support index
+    const Lk_1 = spans[k-1].L; // span left of support k
+    const Lk   = spans[k].L;   // span right of support k
+    const wk_1 = spans[k-1].w;
+    const wk   = spans[k].w;
+    b2[i] = 2 * (Lk_1 + Lk);
+    if (i > 0)      a[i] = Lk_1;
+    if (i < size-1) c[i] = Lk;
+    d[i] = -(wk_1 * Lk_1 * Lk_1 * Lk_1 + wk * Lk * Lk * Lk) / 4;
+  }
+
+  // Thomas algorithm (forward sweep + back substitution)
+  const c2 = c.slice(); const d2 = d.slice();
+  for (let i = 1; i < size; i++) {
+    const m = a[i] / b2[i-1];
+    b2[i] -= m * c2[i-1];
+    d2[i] -= m * d2[i-1];
+  }
+  const x = new Array(size).fill(0);
+  x[size-1] = d2[size-1] / b2[size-1];
+  for (let i = size-2; i >= 0; i--) {
+    x[i] = (d2[i] - c2[i] * x[i+1]) / b2[i];
+  }
+  for (let i = 0; i < size; i++) M[i+1] = x[i];
+  return M; // M[0..n]
+}
+
+function calcContBeam() {
+  const n = _beamSpanCount;
+  const b = parseFloat(document.getElementById('cb_b').value) || 300;
+  const h = parseFloat(document.getElementById('cb_h').value) || 500;
+  const fc = parseFloat(document.getElementById('cb_fc').value) || 24;
+  const fy = parseFloat(document.getElementById('cb_fy').value) || 400;
+  const spans = [];
+  for (let i = 1; i <= n; i++) {
+    const L = parseFloat(document.getElementById('cb_L'+i).value);
+    const w = parseFloat(document.getElementById('cb_w'+i).value);
+    if (!L || !w || L <= 0 || w < 0) { toast('กรุณากรอกข้อมูล L และ w ให้ครบทุกช่วง', 'error'); return; }
+    spans.push({ L, w });
+  }
+
+  const M = _threeMonumentEq(spans); // M[0..n], kN·m (negative = hogging)
+
+  // Compute reactions at each support
+  const R = new Array(n+1).fill(0);
+  for (let k = 0; k < n; k++) {
+    const { L, w } = spans[k];
+    const Mk = M[k], Mk1 = M[k+1];
+    const Rleft  = w*L/2 + (Mk - Mk1)/L;
+    const Rright = w*L/2 + (Mk1 - Mk)/L;
+    R[k]   += Rleft;
+    R[k+1] += Rright;
+  }
+
+  // Max/min moments in each span
+  const spanResults = spans.map(({L, w}, k) => {
+    const Mk = M[k], Mk1 = M[k+1];
+    const Rleft = w*L/2 + (Mk - Mk1)/L;
+    const xMaxM = Rleft / w;
+    let maxPosM = -Infinity;
+    if (xMaxM > 0 && xMaxM < L) {
+      maxPosM = Mk + Rleft*xMaxM - w*xMaxM*xMaxM/2;
+    }
+    maxPosM = Math.max(maxPosM, Mk, Mk1);
+    return { k, L, w, Rleft, Mk, Mk1, xMaxM: Math.max(0,Math.min(L,xMaxM)), maxPosM };
+  });
+
+  const Mmax_neg = Math.min(...M);
+  const Mmax_pos = Math.max(...spanResults.map(s => s.maxPosM));
+  const Vmax = Math.max(...R.map(Math.abs));
+
+  // Section check
+  const d = h - 40;
+  const Mu = Math.max(Math.abs(Mmax_neg), Math.abs(Mmax_pos));
+  const Ru = (Mu * 1e6) / (b * d * d);
+  const inside = 1 - 2*Ru/(0.85*fc);
+  const rho = inside <= 0 ? NaN : (0.85*fc/fy)*(1-Math.sqrt(inside));
+  const rho_min = Math.max(0.25*Math.sqrt(fc)/fy, 1.4/fy);
+  const rho_use = isNaN(rho) ? rho_min : Math.max(rho, rho_min);
+  const As_req = rho_use * b * d;
+  const bars = suggestBars(As_req, 6);
+
+  const supportRow = M.map((m,i) => `<div class="rr"><span class="lbl">M ที่จุดรองรับ ${i} (${i===0||i===n?'ปลาย':'ภายใน'})</span><span class="val">${m.toFixed(2)} kN·m</span></div>`).join('');
+  const reactionRow = R.map((r,i) => `<div class="rr"><span class="lbl">R ที่จุดรองรับ ${i}</span><span class="val">${r.toFixed(2)} kN</span></div>`).join('');
+
+  const html = `
+    <h3>📊 คานต่อเนื่อง ${n} ช่วง</h3>
+    <div class="result-rows">
+      ${supportRow}
+      <div class="rr sep"></div>
+      ${reactionRow}
+      <div class="rr sep"></div>
+      <div class="rr"><span class="lbl">M⁻ สูงสุด (ที่จุดรองรับ)</span><span class="val fail">${Mmax_neg.toFixed(2)} kN·m</span></div>
+      <div class="rr"><span class="lbl">M⁺ สูงสุด (กลางช่วง)</span><span class="val pass">${Mmax_pos.toFixed(2)} kN·m</span></div>
+      <div class="rr"><span class="lbl">V สูงสุด</span><span class="val">${Vmax.toFixed(2)} kN</span></div>
+      <div class="rr"><span class="lbl">As required (จาก Mu)</span><span class="val">${As_req.toFixed(1)} mm²</span></div>
+      <div class="rr"><span class="lbl">แนะนำเหล็กยืน</span><span class="val">${bars.count}-${bars.size} (As=${bars.area_provided.toFixed(0)} mm²)</span></div>
+    </div>
+    ${_verdict(!isNaN(rho), isNaN(rho)?'หน้าตัดเล็กไป — ขยาย b หรือ h':'หน้าตัดผ่าน ACI', isNaN(rho)?'หน้าตัดเล็กไป (Ru เกิน) — ขยาย b หรือ h':'')}
+    ${_refBadge(STRUCT_REF_BUILDING)}
+    <div class="struct-disclaimer">${STRUCT_DISCLAIMER}</div>`;
+  _renderResult('cb_result', html, `Cont.Beam ${n} spans`);
+
+  // Draw SFD + BMD
+  try {
+    _drawContBeamSFD(document.getElementById('cb_sfd'), spans, M, R);
+    _drawContBeamBMD(document.getElementById('cb_bmd'), spans, M, R);
+    document.getElementById('cb_diagrams').classList.add('show');
+  } catch(e) { console.error('cont beam diagram error', e); }
+}
+
+function _drawContBeamDiagram(canvas, spans, getY, label, colorPos, colorNeg) {
+  if (!canvas) return;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const STEPS = 40;
+  const pts = [];
+  const totalL = spans.reduce((s,sp)=>s+sp.L, 0);
+  let xOff = 0;
+  spans.forEach((sp, k) => {
+    for (let i = 0; i <= STEPS; i++) {
+      const t = i / STEPS;
+      const xLocal = t * sp.L;
+      const xGlobal = xOff + xLocal;
+      pts.push({ x: xGlobal, y: getY(sp, k, xLocal) });
+    }
+    xOff += sp.L;
+  });
+
+  const maxY = Math.max(...pts.map(p=>Math.abs(p.y)));
+  if (maxY === 0) return;
+
+  const PAD = { l:40, r:16, t:20, b:30 };
+  const PW = W - PAD.l - PAD.r, PH = H - PAD.t - PAD.b;
+  const toX = gx => PAD.l + (gx / totalL) * PW;
+  const toY = v  => PAD.t + PH/2 - (v / maxY) * (PH/2 * 0.85);
+
+  ctx.fillStyle = '#0a0f18'; ctx.fillRect(0,0,W,H);
+
+  // zero line
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(PAD.l, toY(0)); ctx.lineTo(W-PAD.r, toY(0)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // support verticals
+  let xOff2 = 0;
+  spans.forEach((sp, k) => {
+    if (k === 0) {
+      ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(toX(0),PAD.t); ctx.lineTo(toX(0),H-PAD.b); ctx.stroke();
+    }
+    xOff2 += sp.L;
+    ctx.beginPath(); ctx.moveTo(toX(xOff2),PAD.t); ctx.lineTo(toX(xOff2),H-PAD.b); ctx.stroke();
+  });
+
+  // fill area
+  ctx.beginPath();
+  ctx.moveTo(toX(pts[0].x), toY(0));
+  pts.forEach(p => ctx.lineTo(toX(p.x), toY(p.y)));
+  ctx.lineTo(toX(pts[pts.length-1].x), toY(0));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(96,165,250,0.15)'; ctx.fill();
+
+  // line
+  ctx.beginPath();
+  pts.forEach((p,i) => i===0 ? ctx.moveTo(toX(p.x),toY(p.y)) : ctx.lineTo(toX(p.x),toY(p.y)));
+  ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 2; ctx.stroke();
+
+  // max label
+  const maxPt = pts.reduce((a,b)=>Math.abs(b.y)>Math.abs(a.y)?b:a);
+  ctx.fillStyle='#fff'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(maxPt.y.toFixed(1), toX(maxPt.x), toY(maxPt.y) - 6);
+
+  // axis label
+  ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='10px sans-serif'; ctx.textAlign='left';
+  ctx.fillText(label, PAD.l, PAD.t - 4);
+}
+
+function _drawContBeamSFD(canvas, spans, M, R) {
+  _drawContBeamDiagram(canvas, spans, (sp, k, xLocal) => {
+    const Mk = M[k], Mk1 = M[k+1];
+    const Rl = sp.w*sp.L/2 + (Mk - Mk1)/sp.L;
+    return Rl - sp.w * xLocal; // V(x)
+  }, 'V (kN)', '#60a5fa', '#f87171');
+}
+
+function _drawContBeamBMD(canvas, spans, M, R) {
+  _drawContBeamDiagram(canvas, spans, (sp, k, xLocal) => {
+    const Mk = M[k], Mk1 = M[k+1];
+    const Rl = sp.w*sp.L/2 + (Mk - Mk1)/sp.L;
+    return Mk + Rl*xLocal - sp.w*xLocal*xLocal/2; // M(x)
+  }, 'M (kN·m)', '#34d399', '#f59e0b');
+}
 </script>
 
 <!-- ============================================================
