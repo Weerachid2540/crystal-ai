@@ -1418,21 +1418,6 @@
         </div>
       </section>
 
-      <!-- Quick Actions -->
-      <section class="dash-card" id="dashQuickCard">
-        <div class="dash-card-header">
-          <span class="dash-card-icon">⚡</span>
-          <span class="dash-card-title">Quick Actions</span>
-        </div>
-        <div class="quick-actions-grid">
-          <button class="qa-btn" onclick="openTool('weekly')">📅 Weekly Report</button>
-          <button class="qa-btn" onclick="openTool('monthly')">📊 Monthly Report</button>
-          <button class="qa-btn" onclick="openTool('boq')">📋 BOQ</button>
-          <button class="qa-btn" onclick="openTool('vo')">📝 VO</button>
-          <button class="qa-btn" onclick="openTool('salary')">💰 Salary</button>
-          <button class="qa-btn" onclick="openSettings()">⚙ Settings</button>
-        </div>
-      </section>
     </div>
 
     <!-- RIGHT COLUMN -->
@@ -1517,12 +1502,10 @@
 
     <!-- BODY: chart + tools -->
     <div class="proj-body-grid">
-      <!-- Progress Chart -->
+      <!-- Infographic Chart -->
       <div class="proj-chart-card">
         <div class="proj-section-label">📊 ภาพรวมโครงการ</div>
-        <div class="proj-overview-bars" id="pdOverviewBars">
-          <!-- rendered by JS -->
-        </div>
+        <canvas id="pdInfoCanvas" style="width:100%;height:auto;display:block"></canvas>
       </div>
       <!-- Tools -->
       <div class="proj-tools-card">
@@ -8106,21 +8089,120 @@ function openProjectModal(projectId) {
     }
   });
 
-  // Overview bars
-  const bars = [
-    { label: 'ระยะเวลา (Time)', pct: fillPct, color: 'linear-gradient(90deg,#f59e0b,#f97316)' },
-    { label: 'เป้าหมาย', pct: 100, color: 'rgba(255,255,255,0.08)' },
-    { label: 'แผนงาน (Planned)', pct: Math.min(fillPct + 10, 100), color: 'linear-gradient(90deg,#60a5fa,#818cf8)' },
-    { label: 'ผลงาน (Actual)', pct: fillPct, color: 'linear-gradient(90deg,#34d399,#10b981)' },
-  ];
-  document.getElementById('pdOverviewBars').innerHTML = bars.map(b => `
-    <div class="proj-bar-row">
-      <div class="proj-bar-label"><span>${b.label}</span><span>${b.pct}%</span></div>
-      <div class="proj-bar-track"><div class="proj-bar-fill" style="width:${b.pct}%;background:${b.color}"></div></div>
-    </div>`).join('');
+  // Infographic canvas
+  requestAnimationFrame(() => _drawProjectInfogfx(pct, fillPct, m));
 
   document.getElementById('projectDetailModal').classList.add('show');
 }
+function _drawProjectInfogfx(pct, timePct, m) {
+  const cv = document.getElementById('pdInfoCanvas');
+  if (!cv) return;
+  const W = cv.parentElement.clientWidth || 500;
+  const H = Math.round(W * 0.52);
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  ctx.clearRect(0, 0, W, H);
+
+  const planned = Math.min(timePct + 10, 100);
+  const metrics = [
+    { label: 'ระยะเวลา', val: timePct, color: '#f59e0b', glow: 'rgba(245,158,11,0.4)' },
+    { label: 'แผนงาน',  val: planned,  color: '#818cf8', glow: 'rgba(129,140,248,0.4)' },
+    { label: 'ผลงาน',   val: pct,       color: '#34d399', glow: 'rgba(52,211,153,0.4)' },
+  ];
+
+  // ── background gradient ──
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#0d1829'); bg.addColorStop(1, '#0a1220');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  // ── helper: arc ring ──
+  function ring(cx, cy, r, lw, from, to, color, glow) {
+    if (glow) {
+      ctx.save(); ctx.shadowColor = glow; ctx.shadowBlur = 14;
+    }
+    ctx.beginPath(); ctx.arc(cx, cy, r, from, to);
+    ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.stroke();
+    if (glow) ctx.restore();
+  }
+
+  // ── central big donut ──
+  const cx = W * 0.3, cy = H * 0.5, R = Math.min(W * 0.18, H * 0.38);
+  const start = -Math.PI / 2;
+  // track
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = R * 0.22; ctx.stroke();
+  // fill arc
+  if (pct > 0) {
+    const g = ctx.createLinearGradient(cx - R, cy, cx + R, cy);
+    g.addColorStop(0, '#f59e0b'); g.addColorStop(0.5, '#f97316'); g.addColorStop(1, '#34d399');
+    ctx.save(); ctx.shadowColor = 'rgba(245,158,11,0.5)'; ctx.shadowBlur = 20;
+    ring(cx, cy, R, R * 0.22, start, start + Math.PI * 2 * pct / 100, g, null);
+    ctx.restore();
+  }
+  // center text
+  ctx.textAlign = 'center';
+  ctx.font = `bold ${Math.round(R * 0.55)}px sans-serif`;
+  ctx.fillStyle = '#fff'; ctx.fillText(pct + '%', cx, cy + R * 0.18);
+  ctx.font = `${Math.round(R * 0.25)}px sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fillText('ความคืบหน้า', cx, cy + R * 0.52);
+
+  // ── project name inside ring top ──
+  const name = (m && m.name) ? m.name : '';
+  if (name) {
+    ctx.font = `600 ${Math.round(R * 0.22)}px sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    const maxW = R * 1.6;
+    let display = name.length > 18 ? name.slice(0, 17) + '…' : name;
+    ctx.fillText(display, cx, cy - R * 0.72);
+  }
+
+  // ── 3 mini rings on right ──
+  const rX = W * 0.68, rR = Math.min(W * 0.085, H * 0.17), rLW = rR * 0.26;
+  const rows = [H * 0.22, H * 0.5, H * 0.78];
+  metrics.forEach((mt, i) => {
+    const ry = rows[i];
+    // track
+    ctx.beginPath(); ctx.arc(rX, ry, rR, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = rLW; ctx.stroke();
+    // fill
+    if (mt.val > 0) {
+      ring(rX, ry, rR, rLW, start, start + Math.PI * 2 * mt.val / 100, mt.color, mt.glow);
+    }
+    // pct text
+    ctx.textAlign = 'center';
+    ctx.font = `bold ${Math.round(rR * 0.52)}px sans-serif`;
+    ctx.fillStyle = mt.color; ctx.fillText(mt.val + '%', rX, ry + rR * 0.18);
+    // label
+    ctx.font = `${Math.round(rR * 0.3)}px sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillText(mt.label, rX, ry + rR * 0.62);
+    // dot + legend left of ring
+    const lx = rX - rR - 14;
+    ctx.beginPath(); ctx.arc(lx, ry, 4, 0, Math.PI * 2);
+    ctx.fillStyle = mt.color; ctx.fill();
+  });
+
+  // ── divider line ──
+  ctx.beginPath(); ctx.moveTo(W * 0.5, H * 0.08); ctx.lineTo(W * 0.5, H * 0.92);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1; ctx.stroke();
+
+  // ── status badge bottom-left ──
+  const stMap = { active:'กำลังดำเนินการ', on_hold:'หยุดชั่วคราว', completed:'เสร็จสิ้น' };
+  const stCol = { active:'#34d399', on_hold:'#fbbf24', completed:'#818cf8' };
+  const stText = stMap[m && m.status] || 'ไม่ระบุ';
+  const stColor = stCol[m && m.status] || '#94a3b8';
+  const bx = 20, by = H - 18, bpad = 10, bh = 22;
+  ctx.font = `600 11px sans-serif`;
+  const bw = ctx.measureText(stText).width + bpad * 2;
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(bx, by - bh + 4, bw, bh, 6)
+                : ctx.rect(bx, by - bh + 4, bw, bh);
+  ctx.fillStyle = stColor + '22'; ctx.fill();
+  ctx.strokeStyle = stColor + '66'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = stColor; ctx.textAlign = 'left';
+  ctx.fillText(stText, bx + bpad, by - 2);
+}
+
 function editCurrentProject() {
   if (!currentProjectId) return;
   closeProjectModalDetail();
