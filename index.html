@@ -1076,6 +1076,8 @@
   .struct-save-bar-inner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .struct-save-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-right: 4px; }
   .ghost-btn.sm { padding: 4px 10px; font-size: 12px; min-height: 28px; }
+  #structProjectPicker { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius); padding: 3px 8px; font-size: 12px; height: 28px; max-width: 180px; cursor: pointer; }
+  #structProjectPicker:focus { outline: none; border-color: var(--accent); }
   .struct-history-panel { margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; max-height: 300px; overflow-y: auto; }
   .struct-hist-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
   .struct-hist-item:last-child { border-bottom: none; }
@@ -1448,7 +1450,10 @@
         <div class="struct-save-bar" id="structSaveBar" style="display:none">
           <div class="struct-save-bar-inner">
             <span class="struct-save-label">💾 บันทึกผล:</span>
-            <button class="ghost-btn sm" onclick="saveStructDraft()">📝 Draft (Global)</button>
+            <button class="ghost-btn sm" onclick="saveStructDraft()">📝 Draft</button>
+            <select id="structProjectPicker" title="เลือก Project ปลายทาง">
+              <option value="">— เลือก Project —</option>
+            </select>
             <button class="ghost-btn sm" onclick="saveStructToProject()">📁 Save to Project</button>
             <button class="ghost-btn sm" onclick="toggleStructHistory()">🕐 History</button>
           </div>
@@ -6218,6 +6223,47 @@ const _STRUCT_TYPE_LABEL = {
 let _lastStructCalc  = null;
 let _structHistItems = [];   // cache for history list (avoids large onclick attrs)
 
+// Phase-2B-3: temporarily swap currentProjectId so proxy scopes to target pid
+function withProjectStorage(pid, callback) {
+  const prev = currentProjectId;
+  currentProjectId = pid;
+  try { return callback(); }
+  finally { currentProjectId = prev; }
+}
+
+// Phase-2B-3: read selected project from picker, fall back to currentProjectId
+function _getStructPickerPid() {
+  const sel = document.getElementById('structProjectPicker');
+  return (sel && sel.value) ? sel.value : (currentProjectId || '');
+}
+
+// Phase-2B-3: find project name by id from allProjects array
+function _getProjectName(pid) {
+  if (!pid) return '';
+  const p = (allProjects || []).find(x => String(x.id) === String(pid));
+  return p ? (p.name || p.code || pid) : pid;
+}
+
+// Phase-2B-3: populate project picker dropdown from allProjects
+function populateStructProjectPicker() {
+  const sel = document.getElementById('structProjectPicker');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— เลือก Project —</option>';
+  (allProjects || []).forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = (p.code ? p.code + ' · ' : '') + (p.name || p.id);
+    sel.appendChild(opt);
+  });
+  // Restore previous pick, or default to currentProjectId
+  if (prev && sel.querySelector(`option[value="${prev}"]`)) {
+    sel.value = prev;
+  } else if (currentProjectId && sel.querySelector(`option[value="${currentProjectId}"]`)) {
+    sel.value = currentProjectId;
+  }
+}
+
 function _trackStructCalc(type, title, input_summary) {
   const rid = _STRUCT_RESULT_IDS[type];
   const result_html = rid ? (document.getElementById(rid)?.innerHTML || '') : '';
@@ -6226,6 +6272,7 @@ function _trackStructCalc(type, title, input_summary) {
     type, title, input_summary, result_html,
     created_at: new Date().toISOString()
   };
+  populateStructProjectPicker();  // refresh options each time a calc runs
   const bar = document.getElementById('structSaveBar');
   if (bar) bar.style.display = '';
 }
@@ -6256,20 +6303,22 @@ function clearStructDraft() {
   } catch (e) {}
 }
 
+// Phase-2B-3: save to any picker-selected project, not just currentProjectId
 function saveStructToProject() {
   if (!_lastStructCalc) { toast('ยังไม่มีผลคำนวณ', 'error'); return; }
-  if (!currentProjectId) {
-    toast('กรุณาเปิดโปรเจกต์ก่อน หรือใช้ "Draft" เพื่อบันทึกชั่วคราว', 'warning');
+  const pid = _getStructPickerPid();
+  if (!pid) {
+    toast('กรุณาเลือก Project จาก dropdown หรือใช้ "Draft" บันทึกชั่วคราว', 'warning');
     return;
   }
-  const existing = safeJsonParse(localStorage.getItem(STRUCT_RESULTS_KEY), []);
-  const filtered = existing.filter(r => r.id !== _lastStructCalc.id);
-  filtered.unshift(_lastStructCalc);
-  const trimmed = filtered.slice(0, STRUCT_HISTORY_MAX);
   try {
-    localStorage.setItem(STRUCT_RESULTS_KEY, JSON.stringify(trimmed));
-    const pName = currentProjectMeta?.name || currentProjectId;
-    toast(`✓ บันทึกเข้าโปรเจกต์ "${pName}" แล้ว`, 'success');
+    withProjectStorage(pid, () => {
+      const existing = safeJsonParse(localStorage.getItem(STRUCT_RESULTS_KEY), []);
+      const filtered  = existing.filter(r => r.id !== _lastStructCalc.id);
+      filtered.unshift(_lastStructCalc);
+      localStorage.setItem(STRUCT_RESULTS_KEY, JSON.stringify(filtered.slice(0, STRUCT_HISTORY_MAX)));
+    });
+    toast(`✓ บันทึกเข้าโปรเจกต์ "${escapeHtml(_getProjectName(pid))}" แล้ว`, 'success');
   } catch (e) {
     if (e?.name === 'QuotaExceededError') {
       toast('⚠️ พื้นที่เต็ม — ลบ History บางรายการก่อน', 'warning');
@@ -6279,13 +6328,22 @@ function saveStructToProject() {
   }
 }
 
+// Phase-2B-3: read history from picker-selected project
 function _loadStructHistory() {
-  return safeJsonParse(localStorage.getItem(STRUCT_RESULTS_KEY), []);
+  const pid = _getStructPickerPid();
+  if (!pid) return [];
+  return withProjectStorage(pid, () =>
+    safeJsonParse(localStorage.getItem(STRUCT_RESULTS_KEY), [])
+  );
 }
 
 function deleteStructResult(id) {
-  const updated = _loadStructHistory().filter(r => r.id !== id);
-  try { localStorage.setItem(STRUCT_RESULTS_KEY, JSON.stringify(updated)); } catch (e) {}
+  const pid = _getStructPickerPid();
+  if (!pid) return;
+  withProjectStorage(pid, () => {
+    const updated = safeJsonParse(localStorage.getItem(STRUCT_RESULTS_KEY), []).filter(r => r.id !== id);
+    try { localStorage.setItem(STRUCT_RESULTS_KEY, JSON.stringify(updated)); } catch (e) {}
+  });
   renderStructHistory();
   toast('ลบแล้ว', 'success');
 }
@@ -6331,15 +6389,21 @@ function toggleStructHistory() {
   }
 }
 
+// Phase-2B-3: history reads from picker-selected project
 function renderStructHistory() {
   const panel = document.getElementById('structHistoryPanel');
   if (!panel) return;
-  _structHistItems = _loadStructHistory();
-  if (!_structHistItems.length) {
-    panel.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:6px 0">ยังไม่มีประวัติในโปรเจกต์นี้ — กด "Save to Project" เพื่อบันทึก</div>';
+  const pid = _getStructPickerPid();
+  if (!pid) {
+    panel.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:6px 0">กรุณาเลือก Project จาก dropdown ก่อนดู History</div>';
     return;
   }
-  const pName = currentProjectMeta?.name ? `"${currentProjectMeta.name}"` : 'โปรเจกต์ปัจจุบัน';
+  _structHistItems = _loadStructHistory();
+  const pName = _getProjectName(pid);
+  if (!_structHistItems.length) {
+    panel.innerHTML = `<div style="color:var(--text-muted);font-size:12px;padding:6px 0">ยังไม่มีประวัติใน "${escapeHtml(pName)}" — กด "Save to Project" เพื่อบันทึก</div>`;
+    return;
+  }
   const rows = _structHistItems.map((item, idx) => {
     const d = new Date(item.created_at);
     const dateStr = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
@@ -6355,7 +6419,7 @@ function renderStructHistory() {
     </div>`;
   }).join('');
   panel.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px">
-    ประวัติใน ${pName} (${_structHistItems.length}/${STRUCT_HISTORY_MAX} รายการ)
+    ประวัติใน "${escapeHtml(pName)}" (${_structHistItems.length}/${STRUCT_HISTORY_MAX})
   </div>${rows}`;
 }
 
@@ -7758,6 +7822,7 @@ async function loadProjects() {
   const { data, error } = await sb.from('projects').select('*').order('created_at', { ascending: false });
   if (error) { toast('โหลดโปรเจกต์ไม่สำเร็จ: ' + error.message, 'error'); return; }
   allProjects = data || [];
+  populateStructProjectPicker();   // Phase-2B-3: refresh project dropdown in save bar
   data.forEach(p => {
     const card = document.createElement('div');
     card.className = 'project-card';
