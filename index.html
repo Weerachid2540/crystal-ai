@@ -8107,7 +8107,11 @@ function openProjectModal(projectId) {
     { label: 'แผนงาน (Planned)', pct: Math.min(fillPct + 10, 100), color: 'linear-gradient(90deg,#60a5fa,#818cf8)' },
     { label: 'ผลงาน (Actual)', pct: fillPct, color: 'linear-gradient(90deg,#34d399,#10b981)' },
   ];
-  document.getElementById('pdOverviewBars').innerHTML = bars.map(b => ).join('');
+  document.getElementById('pdOverviewBars').innerHTML = bars.map(b => `
+    <div class="proj-bar-row">
+      <div class="proj-bar-label"><span>${b.label}</span><span>${b.pct}%</span></div>
+      <div class="proj-bar-track"><div class="proj-bar-fill" style="width:${b.pct}%;background:${b.color}"></div></div>
+    </div>`).join('');
 
   document.getElementById('projectDetailModal').classList.add('show');
 }
