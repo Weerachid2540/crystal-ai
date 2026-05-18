@@ -3646,7 +3646,8 @@ function clearDailyPhotos() {
 
 function setupDailyPhotoDragDrop() {
   const zone = document.getElementById('dailyPhotoUploader');
-  if (!zone) return;
+  if (!zone || zone.__dragInitialized) return;
+  zone.__dragInitialized = true;
   ['dragenter', 'dragover'].forEach(ev => {
     zone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); zone.classList.add('dragover'); });
   });
@@ -6529,7 +6530,8 @@ function renderWkPhotoGrid() {
 
 function setupWeeklyPhotoDragDrop() {
   const up = document.getElementById('wkPhotoUploader');
-  if (!up) return;
+  if (!up || up.__dragInitialized) return;
+  up.__dragInitialized = true;
   ['dragenter','dragover'].forEach(e => up.addEventListener(e, ev => { ev.preventDefault(); up.style.borderColor = 'var(--accent)'; }));
   ['dragleave','drop'].forEach(e => up.addEventListener(e, ev => { ev.preventDefault(); up.style.borderColor = ''; }));
   up.addEventListener('drop', ev => { addWkPhotos(ev.dataTransfer.files); });
