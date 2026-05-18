@@ -680,39 +680,39 @@
     display: flex; overflow: hidden;
   }
   /* Left hero panel */
-  .auth-left {
-    flex: 1; position: relative;
-    background: #0a1628;
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  /* Full-page background */
+  .auth-screen {
+    position: relative;
   }
-  .auth-left::before {
-    content: ''; position: absolute; inset: 0;
+  .auth-screen::before {
+    content: ''; position: absolute; inset: 0; z-index: 0;
     background-image: url('./bg-auth.png');
     background-position: center; background-size: cover; background-repeat: no-repeat;
-    opacity: 1;
   }
-  /* Dark gradient overlay — ให้ข้อความอ่านออก + ขอบซ้าย-ขวา blend */
-  .auth-left::after {
-    content: ''; position: absolute; inset: 0;
-    background:
-      linear-gradient(to right, rgba(10,22,40,0.15) 0%, rgba(10,22,40,0.55) 100%),
-      linear-gradient(to top, rgba(10,22,40,0.7) 0%, transparent 50%, rgba(10,22,40,0.4) 100%);
-    animation: glowPulse 6s ease-in-out infinite;
+  .auth-screen::after {
+    content: ''; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(135deg, rgba(8,16,30,0.72) 0%, rgba(10,24,44,0.65) 100%);
   }
   @keyframes glowPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
-  .auth-branding {
-    position: relative; z-index: 2; text-align: center; padding: 40px;
-  }
-  .auth-branding h1 { font-size: 2.8rem; color: var(--accent); font-weight: 700; letter-spacing: -1px; margin-bottom: 12px; }
-  .auth-branding p { font-size: 1rem; color: var(--text2); line-height: 1.6; }
-  /* Right form panel */
+  /* Hide left branding panel */
+  .auth-left { display: none; }
+  .auth-branding { display: none; }
+  /* Right form panel — full width, centered */
   .auth-right {
     flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 60px 40px; background: var(--bg);
+    padding: 40px 20px; background: transparent; position: relative; z-index: 2;
+    min-height: 100vh;
   }
-  /* Card inside right panel */
+  /* Glassmorphism card */
   .auth-card {
-    width: 100%; max-width: 400px;
+    width: 100%; max-width: 420px;
+    background: rgba(15, 25, 45, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 20px;
+    padding: 40px 36px 36px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.55), 0 4px 16px rgba(245,158,11,0.08);
   }
   /* FIXED v6: Auth logo uses logo.jpg with a raised 3D treatment. */
   .auth-logo { display: flex; justify-content: center; align-items: center; margin-bottom: 24px; min-height: 112px; perspective: 700px; }
