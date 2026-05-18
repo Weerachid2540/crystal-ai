@@ -602,8 +602,7 @@
   .dash-card-icon { font-size: 16px; }
   .dash-card-badge { background: var(--tag-bg); border: 1px solid var(--border); border-radius: 5px; padding: 3px 8px; font-size: 10px; color: var(--text2); font-family: var(--mono); }
   .dash-card-body { padding: 16px; }
-  .dashboard-view #dashStructCard,
-  .dashboard-view #dashQuickCard { display: none !important; }
+  .dashboard-view #dashStructCard { display: none !important; }
 
   .ai-assistant-card { flex: 1; min-height: 0; }
   .dash-chat-messages {
@@ -1102,6 +1101,94 @@
     body[data-view="project"] .project-ai-panel { display: none !important; }
   }
 
+/* ====== PROJECT DASHBOARD MODAL ====== */
+.proj-dash-modal {
+  position: fixed; inset: 0; z-index: 10001;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  animation: fadeUp 0.25s ease;
+}
+.proj-dash-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 20px 28px 16px;
+  background: rgba(0,0,0,0.2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.proj-dash-title-area { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.proj-dash-code { font-size: 12px; color: var(--accent); font-family: var(--mono); font-weight: 700; letter-spacing: 1px; }
+.proj-dash-name { font-size: 20px; font-weight: 800; color: var(--text); }
+.proj-dash-meta { font-size: 12px; color: var(--text2); }
+.proj-dash-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.proj-status-badge {
+  background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4);
+  color: #4ade80; border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 700;
+}
+.proj-status-badge.hold { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.4); color: #fbbf24; }
+.proj-status-badge.done { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: #818cf8; }
+
+/* KPI Row */
+.proj-kpi-row {
+  display: flex; gap: 12px; padding: 16px 28px;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+  overflow-x: auto;
+}
+.proj-kpi-card {
+  flex: 1; min-width: 110px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.proj-kpi-icon { font-size: 22px; }
+.proj-kpi-val { font-size: 22px; font-weight: 800; color: var(--text); }
+.proj-kpi-label { font-size: 11px; color: var(--text2); text-align: center; }
+.proj-kpi-ring-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+.proj-kpi-ring-label { position: absolute; font-size: 12px; font-weight: 800; color: var(--accent); }
+
+/* Timeline */
+.proj-timeline-wrap { padding: 16px 28px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.proj-section-label { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 10px; letter-spacing: 0.5px; }
+.proj-timeline-row { display: flex; align-items: center; gap: 10px; }
+.proj-tl-date { font-size: 11px; color: var(--text2); white-space: nowrap; font-family: var(--mono); min-width: 80px; }
+.proj-tl-track { flex: 1; height: 10px; background: var(--surface2); border-radius: 10px; position: relative; overflow: visible; }
+.proj-tl-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #f97316); border-radius: 10px; transition: width 0.6s ease; }
+.proj-tl-today { position: absolute; top: -4px; width: 3px; height: 18px; background: #60a5fa; border-radius: 2px; transform: translateX(-50%); }
+
+/* Body grid */
+.proj-body-grid {
+  display: grid; grid-template-columns: 1fr 280px; gap: 16px;
+  padding: 16px 28px 20px; flex: 1; min-height: 0; overflow: hidden;
+}
+.proj-chart-card, .proj-tools-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* Overview bars */
+.proj-overview-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; flex: 1; }
+.proj-bar-row { display: flex; flex-direction: column; gap: 4px; }
+.proj-bar-label { font-size: 11px; color: var(--text2); display: flex; justify-content: space-between; }
+.proj-bar-track { height: 8px; background: var(--surface2); border-radius: 6px; overflow: hidden; }
+.proj-bar-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+
+/* Tool buttons */
+.proj-tool-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; flex: 1; }
+.proj-tool-btn {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  cursor: pointer; transition: all 0.2s; font-size: 18px; color: var(--text2);
+  font-family: var(--font);
+}
+.proj-tool-btn span { font-size: 11px; font-weight: 600; }
+.proj-tool-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+
+@media (max-width: 768px) {
+  .proj-body-grid { grid-template-columns: 1fr; overflow-y: auto; }
+  .proj-kpi-row { gap: 8px; padding: 12px 16px; }
+  .proj-dash-header { padding: 16px; }
+  .proj-timeline-wrap { padding: 12px 16px; }
+  .proj-body-grid { padding: 12px 16px 16px; }
+}
 </style>
 </head>
 <body data-view="auth">
@@ -1324,6 +1411,22 @@
           </div>
         </div>
       </section>
+
+      <!-- Quick Actions -->
+      <section class="dash-card" id="dashQuickCard">
+        <div class="dash-card-header">
+          <span class="dash-card-icon">⚡</span>
+          <span class="dash-card-title">Quick Actions</span>
+        </div>
+        <div class="quick-actions-grid">
+          <button class="qa-btn" onclick="openTool('weekly')">📅 Weekly Report</button>
+          <button class="qa-btn" onclick="openTool('monthly')">📊 Monthly Report</button>
+          <button class="qa-btn" onclick="openTool('boq')">📋 BOQ</button>
+          <button class="qa-btn" onclick="openTool('vo')">📝 VO</button>
+          <button class="qa-btn" onclick="openTool('salary')">💰 Salary</button>
+          <button class="qa-btn" onclick="openSettings()">⚙ Settings</button>
+        </div>
+      </section>
     </div>
 
     <!-- RIGHT COLUMN -->
@@ -1351,46 +1454,81 @@
 </div>
 
 <!-- Project Detail Modal -->
-<div class="modal-overlay" id="projectDetailModal" role="dialog" aria-labelledby="projDetailName">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title" id="projDetailName">Project</div>
-        <div class="modal-sub" id="projDetailMeta">—</div>
+<div class="modal-overlay" id="projectDetailModal" role="dialog">
+  <div class="proj-dash-modal">
+    <!-- HEADER -->
+    <div class="proj-dash-header">
+      <div class="proj-dash-title-area">
+        <span class="proj-dash-code" id="pdCode">—</span>
+        <div class="proj-dash-name" id="pdName">Project</div>
+        <div class="proj-dash-meta" id="pdMeta">—</div>
       </div>
-      <button class="modal-close" onclick="closeProjectModal()" aria-label="Close">×</button>
+      <div class="proj-dash-actions">
+        <span class="proj-status-badge" id="pdStatusBadge">—</span>
+        <button class="icon-btn" onclick="editCurrentProject()" title="แก้ไข">✏️</button>
+        <button class="modal-close" onclick="closeProjectModalDetail()">×</button>
       </div>
-      <div class="modal-body">
-      <div class="project-tools-grid">
-        <button class="qa-btn" onclick="openTool('report', true)">📄 Report</button>
-        <button class="qa-btn" onclick="openTool('boq', true)">📋 BOQ</button>
-        <button class="qa-btn" onclick="openTool('vo', true)">📝 VO</button>
-        <button class="qa-btn" onclick="openTool('drawing', true)">🗂 Drawing</button>
-        <button class="qa-btn" onclick="openTool('daily', true)">📋 Daily</button>
-        <button class="qa-btn" onclick="openTool('weekly', true)">📅 Weekly</button>
-        <button class="qa-btn" onclick="openTool('monthly', true)">📊 Monthly</button>
-        <button class="qa-btn" onclick="openStructAssistant()">🏗 Struct</button>
-      </div>
-      <div class="modal-tabs" id="projDetailTabs">
-        <button class="modal-tab active" onclick="switchProjTab('reports',this)">📄 Reports</button>
-        <button class="modal-tab" onclick="switchProjTab('boq',this)">📋 BOQ</button>
-        <button class="modal-tab" onclick="switchProjTab('vo',this)">📝 VO</button>
-      </div>
-      <div id="projTab-reports" class="proj-tab-pane active">
-        <div class="struct-actions" style="margin-bottom:12px;flex-wrap:wrap">
-          <button class="ghost-btn" onclick="openTool('daily', true)">📋 Daily Report</button>
-          <button class="ghost-btn" onclick="openTool('weekly', true)">📅 Weekly Report</button>
-          <button class="ghost-btn" onclick="openTool('monthly', true)">📊 Monthly Report</button>
+    </div>
+
+    <!-- KPI ROW -->
+    <div class="proj-kpi-row">
+      <div class="proj-kpi-card">
+        <div class="proj-kpi-ring-wrap">
+          <canvas id="pdProgressRing" width="72" height="72"></canvas>
+          <span class="proj-kpi-ring-label" id="pdProgressPct">0%</span>
         </div>
-        <div class="help-text" data-i18n="proj_reports_hint">เลือกประเภทรายงานเพื่อกรอกข้อมูลและ Export Excel / PDF (ใช้ Signature Pad ในฟอร์มได้ปกติ)</div>
+        <div class="proj-kpi-label">ความคืบหน้า</div>
       </div>
-      <div id="projTab-boq" class="proj-tab-pane">
-        <div class="struct-actions" style="margin-bottom:12px"><button class="ghost-btn" onclick="openTool('boq', true)">📋 เปิด BOQ Tool</button></div>
-        <div class="help-text">เปิด BOQ tool เพื่อแก้ไขรายการ Bill of Quantities ของโครงการ</div>
+      <div class="proj-kpi-card">
+        <div class="proj-kpi-icon">📅</div>
+        <div class="proj-kpi-val" id="pdDaysLeft">—</div>
+        <div class="proj-kpi-label">วันคงเหลือ</div>
       </div>
-      <div id="projTab-vo" class="proj-tab-pane">
-        <div class="struct-actions" style="margin-bottom:12px"><button class="ghost-btn" onclick="openTool('vo', true)">📝 เปิด VO Tool</button></div>
-        <div class="help-text">บันทึก Variation Order / Change Order สำหรับโครงการนี้</div>
+      <div class="proj-kpi-card">
+        <div class="proj-kpi-icon">⏱</div>
+        <div class="proj-kpi-val" id="pdElapsed">—</div>
+        <div class="proj-kpi-label">ดำเนินการแล้ว</div>
+      </div>
+      <div class="proj-kpi-card">
+        <div class="proj-kpi-icon">📋</div>
+        <div class="proj-kpi-val" id="pdStatusKpi">—</div>
+        <div class="proj-kpi-label">สถานะ</div>
+      </div>
+    </div>
+
+    <!-- TIMELINE BAR -->
+    <div class="proj-timeline-wrap">
+      <div class="proj-section-label">📅 Timeline</div>
+      <div class="proj-timeline-row">
+        <span class="proj-tl-date" id="pdTlStart">—</span>
+        <div class="proj-tl-track">
+          <div class="proj-tl-fill" id="pdTlFill" style="width:0%"></div>
+          <div class="proj-tl-today" id="pdTlToday" style="left:0%"></div>
+        </div>
+        <span class="proj-tl-date" id="pdTlEnd">—</span>
+      </div>
+    </div>
+
+    <!-- BODY: chart + tools -->
+    <div class="proj-body-grid">
+      <!-- Progress Chart -->
+      <div class="proj-chart-card">
+        <div class="proj-section-label">📊 ภาพรวมโครงการ</div>
+        <div class="proj-overview-bars" id="pdOverviewBars">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+      <!-- Tools -->
+      <div class="proj-tools-card">
+        <div class="proj-section-label">⚡ เครื่องมือโครงการ</div>
+        <div class="proj-tool-btns">
+          <button class="proj-tool-btn" onclick="openTool('daily',true)">📋<span>Daily Report</span></button>
+          <button class="proj-tool-btn" onclick="openTool('weekly',true)">📅<span>Weekly Report</span></button>
+          <button class="proj-tool-btn" onclick="openTool('monthly',true)">📊<span>Monthly Report</span></button>
+          <button class="proj-tool-btn" onclick="openTool('boq',true)">📋<span>BOQ</span></button>
+          <button class="proj-tool-btn" onclick="openTool('vo',true)">📝<span>VO Document</span></button>
+          <button class="proj-tool-btn" onclick="openTool('drawing',true)">🗂<span>Drawing / Files</span></button>
+        </div>
       </div>
     </div>
   </div>
@@ -7897,28 +8035,103 @@ function closeToolModal() {
 
 // Project detail modal
 function openProjectModal(projectId) {
-  // legacy openProjectModal() with no args = open create-project form (kept as openCreateProject)
   if (projectId === undefined) { return openCreateProject(); }
   currentProjectId = projectId;
   currentProjectMeta = (allProjects || []).find(p => p.id === projectId) || null;
-  const m = currentProjectMeta;
-  document.getElementById('projDetailName').textContent = m ? (m.name || m.code || 'Project') : 'Project';
-  document.getElementById('projDetailMeta').textContent = m
-    ? [m.code, m.client, m.location].filter(Boolean).join(' · ') : '';
-  // default tab
-  switchProjTab('reports', document.querySelector('#projDetailTabs .modal-tab'));
+  const m = currentProjectMeta || {};
+
+  // Header
+  document.getElementById('pdCode').textContent = m.code || '—';
+  document.getElementById('pdName').textContent = m.name || 'Project';
+  document.getElementById('pdMeta').textContent = [m.client, m.location].filter(Boolean).join(' · ') || '—';
+
+  // Status badge
+  const badge = document.getElementById('pdStatusBadge');
+  const statusMap = { active: { label: 'กำลังดำเนินการ', cls: '' }, on_hold: { label: 'หยุดชั่วคราว', cls: 'hold' }, completed: { label: 'เสร็จสิ้น', cls: 'done' } };
+  const st = statusMap[m.status] || statusMap.active;
+  badge.textContent = st.label;
+  badge.className = 'proj-status-badge ' + st.cls;
+
+  // Timeline & KPIs
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = m.start_date ? new Date(m.start_date) : null;
+  const end   = m.end_date   ? new Date(m.end_date)   : null;
+  let pct = 0, daysLeft = '—', elapsed = '—';
+  if (start && end && end > start) {
+    const total = end - start;
+    const done  = Math.min(Math.max(today - start, 0), total);
+    pct = Math.round((done / total) * 100);
+    const remaining = Math.ceil((end - today) / 86400000);
+    daysLeft = remaining > 0 ? remaining + ' วัน' : 'หมดแล้ว';
+    const elapsedDays = Math.ceil((today - start) / 86400000);
+    elapsed = Math.max(elapsedDays, 0) + ' วัน';
+  } else if (start) {
+    const elapsedDays = Math.ceil((today - start) / 86400000);
+    elapsed = Math.max(elapsedDays, 0) + ' วัน';
+  }
+  document.getElementById('pdProgressPct').textContent = pct + '%';
+  document.getElementById('pdDaysLeft').textContent = daysLeft;
+  document.getElementById('pdElapsed').textContent = elapsed;
+  document.getElementById('pdStatusKpi').textContent = st.label;
+
+  // Timeline bar
+  const fmt = d => d ? d.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'}) : '—';
+  document.getElementById('pdTlStart').textContent = start ? fmt(start) : '—';
+  document.getElementById('pdTlEnd').textContent   = end   ? fmt(end)   : '—';
+  const fillPct = Math.min(pct, 100);
+  document.getElementById('pdTlFill').style.width = fillPct + '%';
+  document.getElementById('pdTlToday').style.left  = fillPct + '%';
+
+  // Progress ring (canvas donut)
+  requestAnimationFrame(() => {
+    const c = document.getElementById('pdProgressRing');
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    const cx = 36, cy = 36, r = 28, lw = 8;
+    ctx.clearRect(0, 0, 72, 72);
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = lw; ctx.stroke();
+    if (pct > 0) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * pct / 100));
+      const g = ctx.createLinearGradient(cx - r, cy, cx + r, cy);
+      g.addColorStop(0, '#f59e0b'); g.addColorStop(1, '#f97316');
+      ctx.strokeStyle = g; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.stroke();
+    }
+  });
+
+  // Overview bars
+  const bars = [
+    { label: 'ระยะเวลา (Time)', pct: fillPct, color: 'linear-gradient(90deg,#f59e0b,#f97316)' },
+    { label: 'เป้าหมาย', pct: 100, color: 'rgba(255,255,255,0.08)' },
+    { label: 'แผนงาน (Planned)', pct: Math.min(fillPct + 10, 100), color: 'linear-gradient(90deg,#60a5fa,#818cf8)' },
+    { label: 'ผลงาน (Actual)', pct: fillPct, color: 'linear-gradient(90deg,#34d399,#10b981)' },
+  ];
+  document.getElementById('pdOverviewBars').innerHTML = bars.map(b => ).join('');
+
   document.getElementById('projectDetailModal').classList.add('show');
+}
+function editCurrentProject() {
+  if (!currentProjectId) return;
+  closeProjectModalDetail();
+  const p = currentProjectMeta || {};
+  document.getElementById('projModalId').value = currentProjectId;
+  document.getElementById('projModalCode').value = p.code || '';
+  document.getElementById('projModalName').value = p.name || '';
+  document.getElementById('projModalLocation').value = p.location || '';
+  document.getElementById('projModalClient').value = p.client || '';
+  document.getElementById('projModalStart').value = p.start_date || '';
+  document.getElementById('projModalEnd').value = p.end_date || '';
+  document.getElementById('projModalStatus').value = p.status || 'active';
+  document.getElementById('projectModalTitle').textContent = '✏️ แก้ไขโปรเจกต์';
+  document.getElementById('projectModal').classList.add('show');
 }
 function closeProjectModalDetail() {
   document.getElementById('projectDetailModal').classList.remove('show');
   currentProjectId = null; currentProjectMeta = null;
 }
 function switchProjTab(tab, btn) {
-  document.querySelectorAll('#projectDetailModal .proj-tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('#projDetailTabs .modal-tab').forEach(b => b.classList.remove('active'));
-  const pane = document.getElementById('projTab-' + tab);
-  if (pane) pane.classList.add('active');
-  if (btn) btn.classList.add('active');
+  // stub — kept for legacy compatibility
 }
 
 // Legacy alias: existing code calls openProjectModal() with no args to add a project,
