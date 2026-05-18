@@ -778,7 +778,21 @@
   /* Mobile: hide left panel */
   @media (max-width: 768px) {
     .auth-left { display: none; }
-    .auth-right { padding: 40px 24px; }
+    .auth-right { padding: 24px 16px; align-items: flex-start; padding-top: 40px; }
+    .auth-card {
+      padding: 28px 20px 24px;
+      border-radius: 16px;
+      max-width: 100%;
+    }
+    .auth-logo img { width: 100px; height: 100px; }
+    .auth-title { font-size: 1.5rem; }
+    .auth-company-th { font-size: 12px; }
+    .auth-company-en { font-size: 11px; }
+  }
+  @media (max-width: 400px) {
+    .auth-right { padding: 16px 12px; padding-top: 32px; }
+    .auth-card { padding: 24px 16px 20px; }
+    .auth-logo img { width: 80px; height: 80px; }
   }
 
   /* ---- TOPBAR USER CHIP / CRUMBS ---- */
