@@ -1071,6 +1071,17 @@
     color: var(--text); font-size: 11.5px; line-height: 1.6;
   }
   .struct-disclaimer strong { color: var(--red); }
+  /* Phase-2B-2: Structural Save Bar */
+  .struct-save-bar { border-top: 1px solid var(--border); padding: 10px 14px 4px; margin-top: 14px; }
+  .struct-save-bar-inner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .struct-save-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-right: 4px; }
+  .ghost-btn.sm { padding: 4px 10px; font-size: 12px; min-height: 28px; }
+  .struct-history-panel { margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; max-height: 300px; overflow-y: auto; }
+  .struct-hist-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .struct-hist-item:last-child { border-bottom: none; }
+  .struct-hist-title { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .struct-hist-meta { color: var(--text-muted); white-space: nowrap; font-size: 11px; }
+  .struct-hist-actions { display: flex; gap: 4px; flex-shrink: 0; }
   .qa-textarea {
     width: 100%; min-height: 80px; background: var(--surface2); border: 1px solid var(--border);
     color: var(--text); padding: 10px 12px; border-radius: 6px; font-family: var(--font); font-size: 13px;
@@ -1432,6 +1443,16 @@
             <button class="ghost-btn" onclick="resetStructForm('footing')">รีเซ็ต</button>
           </div>
           <div class="struct-result" id="ft_result"></div>
+        </div>
+        <!-- Phase-2B-2: Structural Save Bar (shown after any calc runs) -->
+        <div class="struct-save-bar" id="structSaveBar" style="display:none">
+          <div class="struct-save-bar-inner">
+            <span class="struct-save-label">💾 บันทึกผล:</span>
+            <button class="ghost-btn sm" onclick="saveStructDraft()">📝 Draft (Global)</button>
+            <button class="ghost-btn sm" onclick="saveStructToProject()">📁 Save to Project</button>
+            <button class="ghost-btn sm" onclick="toggleStructHistory()">🕐 History</button>
+          </div>
+          <div class="struct-history-panel" id="structHistoryPanel" style="display:none"></div>
         </div>
         <!-- AI Analyze -->
         <div id="dashStruct-ai" class="dash-struct-panel">
@@ -5954,6 +5975,7 @@ s = Av·fy_s·d/Vs = ${st.s} mm  (s_max=min(d/2,600)=${_fmt(Math.min(d/2,600),0)
     StructDiagram.drawBMD(document.getElementById('bm_bmd'), result.moment);
     document.getElementById('bm_diagrams').classList.add('show');
   } catch (e) { console.error('[FEAT-5] diagram error:', e); }
+  _trackStructCalc('beam', `Beam ${b}×${h}mm L=${L}m`, `b=${b}, h=${h}, L=${L}m, w=${w}kN/m, fc=${fc}, fy=${fy}`);
 }
 
 // -------- COLUMN --------
@@ -6005,6 +6027,7 @@ Ast = 0.02 × Ag = ${_fmt(Ast,0)} mm²  (อยู่ระหว่าง 1%–
 Pu = ${_fmt(Pu,1)} kN   →   φPn / Pu = ${_fmt(phiPn/Pu,2)} (ต้อง ≥ 1.0)`)}
     <div class="struct-disclaimer">${STRUCT_DISCLAIMER}</div>`;
   _renderResult('cl_result', html, `Column ${b}x${h}mm Pu=${Pu}kN`);
+  _trackStructCalc('column', `Column ${b}×${h}mm Pu=${Pu}kN`, `b=${b}, h=${h}, Lu=${Lu}m, Pu=${Pu}kN, fc=${fc}, fy=${fy}`);
 }
 
 // -------- SLAB --------
@@ -6095,6 +6118,7 @@ Asy = Muy/(0.90·fy·0.9d) = ${_fmt(Asy,0)} mm²/m`)}
       <div class="struct-disclaimer">${STRUCT_DISCLAIMER}</div>`;
   }
   _renderResult('sl_result', html, `Slab ${Lx}x${Ly}m t=${t}mm`);
+  _trackStructCalc('slab', `Slab ${Lx}×${Ly}m t=${t}mm`, `Lx=${Lx}, Ly=${Ly}, t=${t}, wD=${wD}, wL=${wL}, fc=${fc}, fy=${fy}`);
 }
 
 // -------- FOOTING --------
@@ -6170,6 +6194,169 @@ Punching Shear:
 As = Mu/(0.90·fy·0.9d) = ${_fmt(As_per_m,0)} mm²/m`)}
     <div class="struct-disclaimer">${STRUCT_DISCLAIMER}</div>`;
   _renderResult('ft_result', html, `Footing P=${P}kN B=${_fmt(B,2)}m`);
+  _trackStructCalc('footing', `Footing P=${P}kN B=${_fmt(B,2)}m`, `P=${P}, qa=${qa}, Df=${Df}, cx=${cx}, t=${t}, fc=${fc}, fy=${fy}`);
+}
+
+// ============================================================
+// Phase-2B-2: STRUCTURAL SAVE SYSTEM
+// ============================================================
+const STRUCT_DRAFT_KEY   = 'crystal_struct_draft';   // SHARED_KEY — global
+const STRUCT_RESULTS_KEY = 'crystal_struct_results'; // project-scoped via proxy
+const STRUCT_HISTORY_MAX = 10;
+
+const _STRUCT_RESULT_IDS = {
+  beam: 'bm_result', column: 'cl_result',
+  slab: 'sl_result', footing: 'ft_result', cont_beam: 'cb_result'
+};
+const _STRUCT_TAB_MAP = {
+  beam: 'beam', column: 'column', slab: 'slab', footing: 'footing', cont_beam: 'beam', ai: 'ai'
+};
+const _STRUCT_TYPE_LABEL = {
+  beam: 'Beam', column: 'Column', slab: 'Slab', footing: 'Footing', cont_beam: 'คานต่อเนื่อง', ai: 'AI'
+};
+
+let _lastStructCalc  = null;
+let _structHistItems = [];   // cache for history list (avoids large onclick attrs)
+
+function _trackStructCalc(type, title, input_summary) {
+  const rid = _STRUCT_RESULT_IDS[type];
+  const result_html = rid ? (document.getElementById(rid)?.innerHTML || '') : '';
+  _lastStructCalc = {
+    id: Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    type, title, input_summary, result_html,
+    created_at: new Date().toISOString()
+  };
+  const bar = document.getElementById('structSaveBar');
+  if (bar) bar.style.display = '';
+}
+
+function saveStructDraft() {
+  if (!_lastStructCalc) { toast('ยังไม่มีผลคำนวณ', 'error'); return; }
+  try {
+    // Use raw storage so draft bypasses project-scoping (already in SHARED_KEYS, but belt+suspenders)
+    const raw = window.__crystalRawStorage || { set: localStorage.setItem.bind(localStorage) };
+    raw.set(STRUCT_DRAFT_KEY, JSON.stringify(_lastStructCalc));
+    toast('✓ บันทึก Draft แล้ว (Global)', 'success');
+  } catch (e) {
+    toast('บันทึกไม่ได้: ' + (e.message || e), 'error');
+  }
+}
+
+function loadStructDraft() {
+  try {
+    const raw = window.__crystalRawStorage || { get: localStorage.getItem.bind(localStorage) };
+    return safeJsonParse(raw.get(STRUCT_DRAFT_KEY), null);
+  } catch (e) { return null; }
+}
+
+function clearStructDraft() {
+  try {
+    const raw = window.__crystalRawStorage || { rem: localStorage.removeItem.bind(localStorage) };
+    (raw.rem || raw.remove || (() => {}))(STRUCT_DRAFT_KEY);
+  } catch (e) {}
+}
+
+function saveStructToProject() {
+  if (!_lastStructCalc) { toast('ยังไม่มีผลคำนวณ', 'error'); return; }
+  if (!currentProjectId) {
+    toast('กรุณาเปิดโปรเจกต์ก่อน หรือใช้ "Draft" เพื่อบันทึกชั่วคราว', 'warning');
+    return;
+  }
+  const existing = safeJsonParse(localStorage.getItem(STRUCT_RESULTS_KEY), []);
+  const filtered = existing.filter(r => r.id !== _lastStructCalc.id);
+  filtered.unshift(_lastStructCalc);
+  const trimmed = filtered.slice(0, STRUCT_HISTORY_MAX);
+  try {
+    localStorage.setItem(STRUCT_RESULTS_KEY, JSON.stringify(trimmed));
+    const pName = currentProjectMeta?.name || currentProjectId;
+    toast(`✓ บันทึกเข้าโปรเจกต์ "${pName}" แล้ว`, 'success');
+  } catch (e) {
+    if (e?.name === 'QuotaExceededError') {
+      toast('⚠️ พื้นที่เต็ม — ลบ History บางรายการก่อน', 'warning');
+    } else {
+      toast('บันทึกไม่ได้: ' + (e.message || e), 'error');
+    }
+  }
+}
+
+function _loadStructHistory() {
+  return safeJsonParse(localStorage.getItem(STRUCT_RESULTS_KEY), []);
+}
+
+function deleteStructResult(id) {
+  const updated = _loadStructHistory().filter(r => r.id !== id);
+  try { localStorage.setItem(STRUCT_RESULTS_KEY, JSON.stringify(updated)); } catch (e) {}
+  renderStructHistory();
+  toast('ลบแล้ว', 'success');
+}
+
+function restoreStructResult(idx) {
+  const item = _structHistItems[idx];
+  if (!item) return;
+  // Switch to the correct subtab
+  const tabKey = _STRUCT_TAB_MAP[item.type] || 'beam';
+  const tabBtn = document.querySelector(`#dashStructSubtabs .struct-subtab[onclick*="'${tabKey}'"]`);
+  switchDashStruct(tabKey, tabBtn);
+  // For cont_beam, also switch beam sub-type
+  if (item.type === 'cont_beam') {
+    const contPanel = document.getElementById('btype-cont');
+    const s1Panel   = document.getElementById('btype-s1');
+    if (contPanel) contPanel.style.display = '';
+    if (s1Panel)   s1Panel.style.display = 'none';
+  }
+  // Restore result HTML
+  const rid = _STRUCT_RESULT_IDS[item.type];
+  if (rid) {
+    const el = document.getElementById(rid);
+    if (el) {
+      el.innerHTML = item.result_html;
+      el.classList.add('show');
+      setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+    }
+  }
+  _lastStructCalc = item;
+  const bar = document.getElementById('structSaveBar');
+  if (bar) bar.style.display = '';
+  toast(`✓ โหลด "${item.title}" แล้ว`, 'success');
+}
+
+function toggleStructHistory() {
+  const panel = document.getElementById('structHistoryPanel');
+  if (!panel) return;
+  if (panel.style.display === 'none') {
+    renderStructHistory();
+    panel.style.display = '';
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function renderStructHistory() {
+  const panel = document.getElementById('structHistoryPanel');
+  if (!panel) return;
+  _structHistItems = _loadStructHistory();
+  if (!_structHistItems.length) {
+    panel.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:6px 0">ยังไม่มีประวัติในโปรเจกต์นี้ — กด "Save to Project" เพื่อบันทึก</div>';
+    return;
+  }
+  const pName = currentProjectMeta?.name ? `"${currentProjectMeta.name}"` : 'โปรเจกต์ปัจจุบัน';
+  const rows = _structHistItems.map((item, idx) => {
+    const d = new Date(item.created_at);
+    const dateStr = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+      + ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    const typeLabel = _STRUCT_TYPE_LABEL[item.type] || item.type;
+    return `<div class="struct-hist-item">
+      <span class="struct-hist-title">${escapeHtml(typeLabel)}: ${escapeHtml(item.title)}</span>
+      <span class="struct-hist-meta">${dateStr}</span>
+      <div class="struct-hist-actions">
+        <button class="ghost-btn sm" onclick="restoreStructResult(${idx})">โหลด</button>
+        <button class="ghost-btn sm" style="color:var(--red)" onclick="deleteStructResult('${escapeHtml(item.id)}')">ลบ</button>
+      </div>
+    </div>`;
+  }).join('');
+  panel.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px">
+    ประวัติใน ${pName} (${_structHistItems.length}/${STRUCT_HISTORY_MAX} รายการ)
+  </div>${rows}`;
 }
 
 // -------- Q&A LIBRARY --------
@@ -7286,7 +7473,8 @@ try {
 const SHARED_KEYS = new Set([
   'crystal_lang','crystal_settings',
   'crystal_salary_config','crystal_salary_calendar',
-  'crystal_sb_session','crystal_current_project'
+  'crystal_sb_session','crystal_current_project',
+  'crystal_struct_draft'   // Phase-2B-2: global draft (not project-scoped)
 ]);
 function _isSharedKey(k) {
   if (!k || !k.startsWith('crystal_')) return false;
@@ -8698,6 +8886,7 @@ function calcContBeam() {
     _drawContBeamBMD(document.getElementById('cb_bmd'), spans, M, R);
     document.getElementById('cb_diagrams').classList.add('show');
   } catch(e) { console.error('cont beam diagram error', e); }
+  _trackStructCalc('cont_beam', `คานต่อเนื่อง ${n} ช่วง ${b}×${h}mm`, `n=${n}, b=${b}, h=${h}, fc=${fc}, fy=${fy}`);
 }
 
 function _drawContBeamFBD(canvas, spans, M, R) {
