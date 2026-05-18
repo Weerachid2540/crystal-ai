@@ -1039,6 +1039,9 @@
   .struct-result .rr .val { color: var(--text); font-weight: 600; font-family: var(--mono); font-size: 12px; }
   .struct-result .rr .val.pass { color: var(--green); }
   .struct-result .rr .val.fail { color: var(--red); }
+  .struct-result .rr.sep { border-bottom: 1px solid var(--border); padding: 0; height: 6px; grid-column: 1/-1; }
+  .struct-result .rr.section-hd { grid-column: 1/-1; padding: 6px 0 2px; border-bottom: 1px solid rgba(245,158,11,0.3); }
+  .struct-result .rr.section-hd span { color: var(--gold); font-weight: 700; font-size: 12px; }
   .struct-result .verdict {
     margin: 10px 0; padding: 10px 12px; border-radius: 6px; font-weight: 600; font-size: 14px;
     display: flex; align-items: center; gap: 8px;
@@ -5431,13 +5434,38 @@ const REBAR_SIZES = [
 ];
 
 function suggestBars(As_required, maxBars) {
-  // Pick smallest size where required count ≤ maxBars; minimum 2 bars
   for (const sz of REBAR_SIZES) {
     const n = Math.max(2, Math.ceil(As_required / sz.area));
     if (!maxBars || n <= maxBars) return { count: n, size: sz.name, area_provided: n * sz.area };
   }
   const sz = REBAR_SIZES[REBAR_SIZES.length - 1];
   return { count: Math.ceil(As_required / sz.area), size: sz.name, area_provided: Math.ceil(As_required / sz.area) * sz.area };
+}
+
+// Stirrup design — RB (SR24, fy_s=235 MPa), 2-leg closed stirrups
+// Returns { type, Av, s, Vc, phiVc, Vs_req }
+function suggestStirrups(Vu_kN, b, d, fc) {
+  const fy_s = 235; // SR24
+  const Vc = 0.17 * Math.sqrt(fc) * b * d / 1000; // kN
+  const phiVc = 0.75 * Vc;
+  const Vs_req = Math.max(0, Vu_kN / 0.75 - Vc); // kN
+  const s_max = Math.floor(Math.min(d / 2, 600) / 25) * 25;
+  const STIRRUP_TYPES = [
+    { name: 'RB6', Av: 56.5 },
+    { name: 'RB9', Av: 127.2 },
+  ];
+  for (const st of STIRRUP_TYPES) {
+    let s_calc;
+    if (Vs_req <= 0) {
+      const k = Math.max(0.062 * Math.sqrt(fc), 0.35);
+      s_calc = st.Av * fy_s / (k * b);
+    } else {
+      s_calc = st.Av * fy_s * d / (Vs_req * 1000);
+    }
+    const s_use = Math.min(Math.floor(s_calc / 25) * 25, s_max);
+    if (s_use >= 75) return { type: st.name, Av: st.Av, s: s_use, Vc, phiVc, Vs_req };
+  }
+  return { type: 'RB9', Av: 127.2, s: 75, Vc, phiVc, Vs_req };
 }
 
 function switchStructTab(name, btnEl) {
@@ -5768,55 +5796,82 @@ function calcBeam() {
   const b = _num('bm_b'), h = _num('bm_h'), L = _num('bm_L'), w = _num('bm_w'),
         fc = _num('bm_fc'), fy = _num('bm_fy');
   if (!b || !h || !L || !w || !fc || !fy) { toast('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
-  const d = h - 40;                                    // effective depth (mm) — assume cover 40
-  const Mmax = w * L * L / 8;                          // kN·m
-  const Vmax = w * L / 2;                              // kN
-  const Ru = (Mmax * 1e6) / (b * d * d);               // MPa
-  // ρ = (0.85f'c/fy) * (1 - sqrt(1 - 2Ru/(0.85f'c)))
-  const inside = 1 - (2 * Ru) / (0.85 * fc);
-  const rho = inside <= 0 ? NaN : (0.85 * fc / fy) * (1 - Math.sqrt(inside));
+  const d = h - 40;
+  const Mmax = w * L * L / 8;   // kN·m (กลางช่วง)
+  const Vmax = w * L / 2;       // kN (ที่จุดรองรับ)
   const rho_min = Math.max(0.25 * Math.sqrt(fc) / fy, 1.4 / fy);
-  const rho_use = isNaN(rho) ? rho_min : Math.max(rho, rho_min);
-  const As_req = rho_use * b * d;                      // mm²
-  const bars = suggestBars(As_req, 6);
-  const E_c = 4700 * Math.sqrt(fc);                    // MPa
-  const I = b * Math.pow(h, 3) / 12;                   // mm⁴
-  const delta = (5 * w * Math.pow(L*1000, 4)) / (384 * E_c * I);  // mm
-  const delta_lim = (L * 1000) / 360;                  // mm
-  const deflectionOK = delta <= delta_lim;
-  const sectionOK = !isNaN(rho);
+
+  // ── เหล็กยืนล่าง (Bottom — Tension) ──
+  const Ru_bot = (Mmax * 1e6) / (b * d * d);
+  const in_bot = 1 - 2 * Ru_bot / (0.85 * fc);
+  const rho_bot = in_bot <= 0 ? NaN : (0.85 * fc / fy) * (1 - Math.sqrt(in_bot));
+  const rho_bot_use = isNaN(rho_bot) ? rho_min : Math.max(rho_bot, rho_min);
+  const As_bot = rho_bot_use * b * d;
+  const bars_bot = suggestBars(As_bot, 6);
+
+  // ── เหล็กยืนบน (Top — ρ_min สำหรับ simply supported) ──
+  const As_top = rho_min * b * d;
+  const bars_top = suggestBars(As_top, 4);
+
+  // ── เหล็กปลอก (Stirrups) ──
+  const st = suggestStirrups(Vmax, b, d, fc);
+
+  // ── Deflection ──
+  const Ec = 4700 * Math.sqrt(fc);
+  const I  = b * Math.pow(h, 3) / 12;
+  const delta = (5 * w * Math.pow(L * 1000, 4)) / (384 * Ec * I);
+  const delta_lim = L * 1000 / 360;
+  const deflOK = delta <= delta_lim;
+  const secOK  = !isNaN(rho_bot);
+
   const html = `
-    <h3>📊 ผลการคำนวณ — คาน</h3>
+    <h3>📊 ผลการคำนวณ — คาน (Simply Supported UDL)</h3>
     <div class="result-rows">
       <div class="rr"><span class="lbl">Effective depth d</span><span class="val">${_fmt(d,0)} mm</span></div>
-      <div class="rr"><span class="lbl">Mmax (moment สูงสุด)</span><span class="val">${_fmt(Mmax)} kN·m</span></div>
-      <div class="rr"><span class="lbl">Vmax (แรงเฉือนสูงสุด)</span><span class="val">${_fmt(Vmax)} kN</span></div>
-      <div class="rr"><span class="lbl">Ru (resistance factor)</span><span class="val">${_fmt(Ru,3)} MPa</span></div>
-      <div class="rr"><span class="lbl">ρ (อัตราเหล็ก)</span><span class="val">${isNaN(rho) ? '— (Ru เกินขีดจำกัด)' : _fmt(rho,5)}</span></div>
+      <div class="rr"><span class="lbl">Mmax (กลางช่วง)</span><span class="val">${_fmt(Mmax)} kN·m</span></div>
+      <div class="rr"><span class="lbl">Vmax (ที่จุดรองรับ)</span><span class="val">${_fmt(Vmax)} kN</span></div>
       <div class="rr"><span class="lbl">ρ_min</span><span class="val">${_fmt(rho_min,5)}</span></div>
-      <div class="rr"><span class="lbl">As required</span><span class="val">${_fmt(As_req,1)} mm²</span></div>
-      <div class="rr"><span class="lbl">แนะนำเหล็กยืน</span><span class="val">${bars.count}-${bars.size} (As=${_fmt(bars.area_provided,0)} mm²)</span></div>
-      <div class="rr"><span class="lbl">Δ (deflection)</span><span class="val ${deflectionOK?'pass':'fail'}">${_fmt(delta,2)} mm</span></div>
+
+      <div class="rr section-hd"><span>🔩 เหล็กยืนล่าง — Bottom Steel (Tension)</span></div>
+      <div class="rr"><span class="lbl">Ru</span><span class="val">${_fmt(Ru_bot,3)} MPa</span></div>
+      <div class="rr"><span class="lbl">ρ (คำนวณ)</span><span class="val">${isNaN(rho_bot) ? 'Ru เกินขีดจำกัด' : _fmt(rho_bot,5)}</span></div>
+      <div class="rr"><span class="lbl">As_bot required</span><span class="val">${_fmt(As_bot,1)} mm²</span></div>
+      <div class="rr"><span class="lbl">แนะนำเหล็กยืนล่าง</span><span class="val pass">${bars_bot.count}-${bars_bot.size} (As=${_fmt(bars_bot.area_provided,0)} mm²)</span></div>
+
+      <div class="rr section-hd"><span>🔩 เหล็กยืนบน — Top Steel (Compression / ρ_min)</span></div>
+      <div class="rr"><span class="lbl">As_top required</span><span class="val">${_fmt(As_top,1)} mm²</span></div>
+      <div class="rr"><span class="lbl">แนะนำเหล็กยืนบน</span><span class="val">${bars_top.count}-${bars_top.size} (As=${_fmt(bars_top.area_provided,0)} mm²)</span></div>
+
+      <div class="rr section-hd"><span>🔗 เหล็กปลอก — Stirrups (RB, SR24)</span></div>
+      <div class="rr"><span class="lbl">Vc</span><span class="val">${_fmt(st.Vc,2)} kN</span></div>
+      <div class="rr"><span class="lbl">φVc</span><span class="val">${_fmt(st.phiVc,2)} kN</span></div>
+      <div class="rr"><span class="lbl">Vs required</span><span class="val">${_fmt(st.Vs_req,2)} kN</span></div>
+      <div class="rr"><span class="lbl">แนะนำเหล็กปลอก</span><span class="val pass">${st.type}@${st.s} mm (2 ขา, Av=${_fmt(st.Av,1)} mm²)</span></div>
+
+      <div class="rr section-hd"><span>📐 Deflection</span></div>
+      <div class="rr"><span class="lbl">Δ</span><span class="val ${deflOK?'pass':'fail'}">${_fmt(delta,2)} mm</span></div>
       <div class="rr"><span class="lbl">Δ allowable (L/360)</span><span class="val">${_fmt(delta_lim,2)} mm</span></div>
     </div>
-    ${_verdict(sectionOK && deflectionOK,
-       'หน้าตัดและ deflection ผ่าน',
-       !sectionOK ? 'หน้าตัดเล็กไป (Ru เกิน) — ขยาย b หรือ h' : 'Deflection เกิน L/360 — เพิ่มความสูง h')}
+    ${_verdict(secOK && deflOK,
+      'หน้าตัด + deflection ผ่าน',
+      !secOK ? 'Ru เกินขีดจำกัด — ขยาย b หรือ h' : 'Deflection เกิน L/360 — เพิ่มความสูง h')}
     ${_refBadge(STRUCT_REF_BUILDING)}
-    ${_formulaBlock(`d = h − 40 = ${h} − 40 = ${_fmt(d,0)} mm
-Mmax = wL²/8 = ${w}×${L}²/8 = ${_fmt(Mmax)} kN·m
-Vmax = wL/2 = ${w}×${L}/2 = ${_fmt(Vmax)} kN
-Ru = Mmax×10⁶ / (b·d²) = ${_fmt(Mmax)}×10⁶ / (${b}×${d}²) = ${_fmt(Ru,3)} MPa
-ρ = (0.85f'c/fy)·[1 − √(1 − 2Ru/(0.85f'c))]
-  = (0.85×${fc}/${fy})·[1 − √(1 − 2×${_fmt(Ru,3)}/(0.85×${fc}))] = ${isNaN(rho)?'—':_fmt(rho,5)}
-ρ_min = max(0.25√f'c/fy, 1.4/fy) = max(${_fmt(0.25*Math.sqrt(fc)/fy,5)}, ${_fmt(1.4/fy,5)}) = ${_fmt(rho_min,5)}
-As = ρ_use × b × d = ${_fmt(rho_use,5)} × ${b} × ${d} = ${_fmt(As_req,1)} mm²
-E_c = 4700√f'c = 4700×√${fc} = ${_fmt(E_c,0)} MPa
-I = bh³/12 = ${b}×${h}³/12 = ${_fmt(I/1e6,1)}×10⁶ mm⁴
-Δ = 5wL⁴/(384·E·I) = ${_fmt(delta,2)} mm   (allowable L/360 = ${_fmt(delta_lim,2)} mm)`)}
+    ${_formulaBlock(`d = h−40 = ${_fmt(d,0)} mm
+Mmax = wL²/8 = ${_fmt(Mmax)} kN·m   Vmax = wL/2 = ${_fmt(Vmax)} kN
+── Bottom Steel ──
+Ru = Mu×10⁶/(b·d²) = ${_fmt(Ru_bot,3)} MPa
+ρ = (0.85f'c/fy)[1−√(1−2Ru/0.85f'c)] = ${isNaN(rho_bot)?'—':_fmt(rho_bot,5)}
+As_bot = ${_fmt(As_bot,1)} mm²  →  ${bars_bot.count}-${bars_bot.size}
+── Top Steel ──
+As_top = ρ_min×b×d = ${_fmt(As_top,1)} mm²  →  ${bars_top.count}-${bars_top.size}
+── Stirrups (fy_s=235 MPa) ──
+Vc = 0.17√f'c·b·d/1000 = ${_fmt(st.Vc,2)} kN   φVc = ${_fmt(st.phiVc,2)} kN
+Vs = Vu/φ−Vc = ${_fmt(st.Vs_req,2)} kN
+s = Av·fy_s·d/Vs = ${st.s} mm  (s_max=min(d/2,600)=${_fmt(Math.min(d/2,600),0)} mm)
+── Deflection ──
+Δ = 5wL⁴/(384EI) = ${_fmt(delta,2)} mm  ≤  L/360 = ${_fmt(delta_lim,2)} mm`)}
     <div class="struct-disclaimer">${STRUCT_DISCLAIMER}</div>`;
   _renderResult('bm_result', html, `Beam ${b}x${h}mm L=${L}m`);
-  // FIXED v5.1: Draw FBD + SFD + BMD — FEAT-5
   try {
     const result = StructDiagram.calcSimplySupported_UDL(L, w);
     const beam = {
@@ -8495,49 +8550,61 @@ function calcContBeam() {
     spans.push({ L, w });
   }
 
-  const M = _threeMonumentEq(spans); // M[0..n], kN·m (negative = hogging)
+  const M = _threeMonumentEq(spans);
+  const d = h - 40;
+  const rho_min = Math.max(0.25 * Math.sqrt(fc) / fy, 1.4 / fy);
 
-  // Compute reactions at each support
+  // Reactions
   const R = new Array(n+1).fill(0);
   for (let k = 0; k < n; k++) {
     const { L, w } = spans[k];
-    const Mk = M[k], Mk1 = M[k+1];
-    const Rleft  = w*L/2 + (Mk - Mk1)/L;
-    const Rright = w*L/2 + (Mk1 - Mk)/L;
-    R[k]   += Rleft;
-    R[k+1] += Rright;
+    const Rleft  = w*L/2 + (M[k] - M[k+1])/L;
+    const Rright = w*L/2 + (M[k+1] - M[k])/L;
+    R[k] += Rleft; R[k+1] += Rright;
   }
 
-  // Max/min moments in each span
-  const spanResults = spans.map(({L, w}, k) => {
-    const Mk = M[k], Mk1 = M[k+1];
-    const Rleft = w*L/2 + (Mk - Mk1)/L;
-    const xMaxM = Rleft / w;
-    let maxPosM = -Infinity;
-    if (xMaxM > 0 && xMaxM < L) {
-      maxPosM = Mk + Rleft*xMaxM - w*xMaxM*xMaxM/2;
-    }
-    maxPosM = Math.max(maxPosM, Mk, Mk1);
-    return { k, L, w, Rleft, Mk, Mk1, xMaxM: Math.max(0,Math.min(L,xMaxM)), maxPosM };
+  // ── เหล็กยืนล่าง — Bottom Steel (M⁺ กลางแต่ละช่วง) ──
+  const botResults = spans.map(({ L, w }, k) => {
+    const Rleft = w*L/2 + (M[k] - M[k+1])/L;
+    const xp = Rleft / w;
+    let Mpos = (xp > 0 && xp < L) ? M[k] + Rleft*xp - w*xp*xp/2 : 0;
+    Mpos = Math.max(0, Mpos);
+    const Ru = Mpos > 0 ? (Mpos * 1e6) / (b * d * d) : 0;
+    const ins = 1 - 2*Ru/(0.85*fc);
+    const rho = (Mpos > 0 && ins > 0) ? (0.85*fc/fy)*(1-Math.sqrt(ins)) : NaN;
+    const rho_use = (isNaN(rho) || rho < rho_min) ? rho_min : rho;
+    const As = rho_use * b * d;
+    return { k, Mpos, Ru, As, bars: suggestBars(As, 6) };
   });
 
-  const Mmax_neg = Math.min(...M);
-  const Mmax_pos = Math.max(...spanResults.map(s => s.maxPosM));
+  // ── เหล็กยืนบน — Top Steel (M⁻ ที่จุดรองรับภายใน) ──
+  const topResults = M.map((Mneg, i) => {
+    const Mu = Math.max(0, -Mneg);
+    const Ru = Mu > 0 ? (Mu * 1e6) / (b * d * d) : 0;
+    const ins = 1 - 2*Ru/(0.85*fc);
+    const rho = (Mu > 0 && ins > 0) ? (0.85*fc/fy)*(1-Math.sqrt(ins)) : NaN;
+    const rho_use = (isNaN(rho) || rho < rho_min) ? rho_min : rho;
+    const As = rho_use * b * d;
+    return { i, Mneg, Mu, As, bars: suggestBars(As, 6) };
+  });
+
+  // ── เหล็กปลอก — Stirrups (จาก Vmax) ──
   const Vmax = Math.max(...R.map(Math.abs));
+  const st = suggestStirrups(Vmax, b, d, fc);
 
-  // Section check
-  const d = h - 40;
-  const Mu = Math.max(Math.abs(Mmax_neg), Math.abs(Mmax_pos));
-  const Ru = (Mu * 1e6) / (b * d * d);
-  const inside = 1 - 2*Ru/(0.85*fc);
-  const rho = inside <= 0 ? NaN : (0.85*fc/fy)*(1-Math.sqrt(inside));
-  const rho_min = Math.max(0.25*Math.sqrt(fc)/fy, 1.4/fy);
-  const rho_use = isNaN(rho) ? rho_min : Math.max(rho, rho_min);
-  const As_req = rho_use * b * d;
-  const bars = suggestBars(As_req, 6);
+  const secOK = botResults.every(s => s.Mpos === 0 || !isNaN(s.Ru))
+             && topResults.filter(s => s.Mu > 0.01).every(s => s.Ru < 0.85*fc/2);
 
-  const supportRow = M.map((m,i) => `<div class="rr"><span class="lbl">M ที่จุดรองรับ ${i} (${i===0||i===n?'ปลาย':'ภายใน'})</span><span class="val">${m.toFixed(2)} kN·m</span></div>`).join('');
-  const reactionRow = R.map((r,i) => `<div class="rr"><span class="lbl">R ที่จุดรองรับ ${i}</span><span class="val">${r.toFixed(2)} kN</span></div>`).join('');
+  const supportRow = M.map((m,i) =>
+    `<div class="rr"><span class="lbl">M จุดรองรับ ${i} (${i===0||i===n?'ปลาย':'ภายใน'})</span><span class="val ${m < -0.01?'fail':''}">${m.toFixed(2)} kN·m</span></div>`).join('');
+  const reactionRow = R.map((r,i) =>
+    `<div class="rr"><span class="lbl">R จุดรองรับ ${i}</span><span class="val">${r.toFixed(2)} kN</span></div>`).join('');
+  const botRows = botResults.map(s =>
+    `<div class="rr"><span class="lbl">M⁺ ช่วงที่ ${s.k+1}</span><span class="val pass">${s.Mpos.toFixed(2)} kN·m</span></div>
+     <div class="rr"><span class="lbl">แนะนำเหล็กล่าง ช่วงที่ ${s.k+1}</span><span class="val pass">${s.bars.count}-${s.bars.size} (As=${s.As.toFixed(0)} mm²)</span></div>`).join('');
+  const topRows = topResults.filter(s => s.Mu > 0.01).map(s =>
+    `<div class="rr"><span class="lbl">M⁻ จุดรองรับ ${s.i}</span><span class="val fail">${s.Mneg.toFixed(2)} kN·m</span></div>
+     <div class="rr"><span class="lbl">แนะนำเหล็กบน จุด ${s.i}</span><span class="val">${s.bars.count}-${s.bars.size} (As=${s.As.toFixed(0)} mm²)</span></div>`).join('');
 
   const html = `
     <h3>📊 คานต่อเนื่อง ${n} ช่วง</h3>
@@ -8546,13 +8613,17 @@ function calcContBeam() {
       <div class="rr sep"></div>
       ${reactionRow}
       <div class="rr sep"></div>
-      <div class="rr"><span class="lbl">M⁻ สูงสุด (ที่จุดรองรับ)</span><span class="val fail">${Mmax_neg.toFixed(2)} kN·m</span></div>
-      <div class="rr"><span class="lbl">M⁺ สูงสุด (กลางช่วง)</span><span class="val pass">${Mmax_pos.toFixed(2)} kN·m</span></div>
-      <div class="rr"><span class="lbl">V สูงสุด</span><span class="val">${Vmax.toFixed(2)} kN</span></div>
-      <div class="rr"><span class="lbl">As required (จาก Mu)</span><span class="val">${As_req.toFixed(1)} mm²</span></div>
-      <div class="rr"><span class="lbl">แนะนำเหล็กยืน</span><span class="val">${bars.count}-${bars.size} (As=${bars.area_provided.toFixed(0)} mm²)</span></div>
+      <div class="rr section-hd"><span>🔩 เหล็กยืนล่าง — Bottom Steel (M⁺ กลางช่วง)</span></div>
+      ${botRows}
+      <div class="rr section-hd"><span>🔩 เหล็กยืนบน — Top Steel (M⁻ จุดรองรับ)</span></div>
+      ${topRows || `<div class="rr"><span class="lbl">ไม่มี M⁻</span><span class="val">ใช้ ρ_min ทุกจุด</span></div>`}
+      <div class="rr section-hd"><span>🔗 เหล็กปลอก — Stirrups (RB, SR24, ออกแบบจาก Vmax)</span></div>
+      <div class="rr"><span class="lbl">Vmax</span><span class="val">${Vmax.toFixed(2)} kN</span></div>
+      <div class="rr"><span class="lbl">Vc / φVc</span><span class="val">${_fmt(st.Vc,2)} / ${_fmt(st.phiVc,2)} kN</span></div>
+      <div class="rr"><span class="lbl">Vs required</span><span class="val">${_fmt(st.Vs_req,2)} kN</span></div>
+      <div class="rr"><span class="lbl">แนะนำเหล็กปลอก</span><span class="val pass">${st.type}@${st.s} mm (2 ขา, Av=${_fmt(st.Av,1)} mm²)</span></div>
     </div>
-    ${_verdict(!isNaN(rho), isNaN(rho)?'หน้าตัดเล็กไป — ขยาย b หรือ h':'หน้าตัดผ่าน ACI', isNaN(rho)?'หน้าตัดเล็กไป (Ru เกิน) — ขยาย b หรือ h':'')}
+    ${_verdict(secOK, 'หน้าตัดผ่าน ACI', 'หน้าตัดเล็กไป — ขยาย b หรือ h')}
     ${_refBadge(STRUCT_REF_BUILDING)}
     <div class="struct-disclaimer">${STRUCT_DISCLAIMER}</div>`;
   _renderResult('cb_result', html, `Cont.Beam ${n} spans`);
