@@ -2525,6 +2525,23 @@ function setValue(id, value) {
   if (el) el.value = value;
 }
 
+// Phase-1C: Centralized modal helpers — ลด .classList.add/remove('show') ซ้ำ
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (!el) { console.warn('[Crystal] openModal: not found —', id); return; }
+  el.classList.add('show');
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (!el) { console.warn('[Crystal] closeModal: not found —', id); return; }
+  el.classList.remove('show');
+}
+function toggleModal(id, show) {
+  const el = document.getElementById(id);
+  if (!el) { console.warn('[Crystal] toggleModal: not found —', id); return; }
+  el.classList.toggle('show', show);
+}
+
 // FIXED #2: คืนวันที่แบบ local timezone — ไม่ใช้ toISOString() ที่เป็น UTC
 // FIXED v5.1: accept Date/string/number inputs without falling back to today — BUG-6
 function localDate(date) {
@@ -4038,14 +4055,14 @@ function openSalaryDayModal(day) {
     oc.appendChild(chip);
   });
 
-  document.getElementById('salaryDayModal').classList.add('show');
+  openModal('salaryDayModal');
 }
 function _selectOtChip(chip) {
   chip.parentElement.querySelectorAll('.salary-chip').forEach(c => c.classList.remove('active'));
   chip.classList.add('active');
 }
 function closeSalaryDayModal() {
-  document.getElementById('salaryDayModal').classList.remove('show');
+  closeModal('salaryDayModal');
   salaryEditingDay = null;
 }
 function saveSalaryDay() {
@@ -4108,9 +4125,9 @@ function openSalarySettings() {
   _renderSetList('salarySetOtRates', salaryConfig.otRates, ['label', 'rate'], ['ชื่ออัตรา OT', 'อัตรา/ครั้ง']);
   _renderSetList('salarySetExtras', salaryConfig.extras, ['label', 'amount'], ['ชื่อรายได้', 'จำนวน']);
   _renderSetList('salarySetDeductions', salaryConfig.deductions, ['label', 'amount'], ['ชื่อรายหัก', 'จำนวน']);
-  document.getElementById('salarySettingsModal').classList.add('show');
+  openModal('salarySettingsModal');
 }
-function closeSalarySettings() { document.getElementById('salarySettingsModal').classList.remove('show'); }
+function closeSalarySettings() { closeModal('salarySettingsModal'); }
 
 function _renderSetList(containerId, items, fields, placeholders) {
   const container = document.getElementById(containerId);
@@ -4991,11 +5008,11 @@ function openSettings() {
   sel.value = settings.provider;
   editingProvider = settings.provider;
   renderProviderSection(settings.provider);
-  document.getElementById('settingsModal').classList.add('show');
+  openModal('settingsModal');
 }
 
 function closeSettings() {
-  document.getElementById('settingsModal').classList.remove('show');
+  closeModal('settingsModal');
 }
 
 function captureFormToSettings(provider) {
@@ -7582,9 +7599,9 @@ function openProjectModal() {
   document.getElementById('projModalEnd').value = '';
   document.getElementById('projModalStatus').value = 'active';
   document.getElementById('projectModalTitle').textContent = '📁 เพิ่มโปรเจกต์';
-  document.getElementById('projectModal').classList.add('show');
+  openModal('projectModal');
 }
-function closeProjectModal() { document.getElementById('projectModal').classList.remove('show'); }
+function closeProjectModal() { closeModal('projectModal'); }
 
 function editProject(id) {
   const p = allProjects.find(x => x.id === id);
@@ -7598,7 +7615,7 @@ function editProject(id) {
   document.getElementById('projModalEnd').value = p.end_date || '';
   document.getElementById('projModalStatus').value = p.status || 'active';
   document.getElementById('projectModalTitle').textContent = '✏ แก้ไขโปรเจกต์';
-  document.getElementById('projectModal').classList.add('show');
+  openModal('projectModal');
 }
 
 async function saveProject(e) {
@@ -7721,9 +7738,9 @@ function openUserModal() {
   document.getElementById('userModalPwRow').style.display = '';
   document.getElementById('userModalPw').required = true;
   document.getElementById('userModalTitle').textContent = '👤 เพิ่มผู้ใช้';
-  document.getElementById('userModal').classList.add('show');
+  openModal('userModal');
 }
-function closeUserModal() { document.getElementById('userModal').classList.remove('show'); }
+function closeUserModal() { closeModal('userModal'); }
 
 async function editUser(id) {
   const { data: u, error } = await sb.from('employees').select('*').eq('id', id).single();
@@ -7740,7 +7757,7 @@ async function editUser(id) {
   document.getElementById('userModalPwRow').style.display = 'none';
   document.getElementById('userModalPw').required = false;
   document.getElementById('userModalTitle').textContent = '✏ แก้ไขผู้ใช้: ' + u.employee_id;
-  document.getElementById('userModal').classList.add('show');
+  openModal('userModal');
 }
 
 async function saveUser(e) {
@@ -8120,7 +8137,7 @@ function openTool(tool /*, fromProject*/) {
   panel.classList.add('active');
   body.appendChild(panel);
   document.getElementById('toolModalTitle').textContent = _toolModalTitleMap[tool] || tool;
-  document.getElementById('toolModal').classList.add('show');
+  openModal('toolModal');
   // init signature pads in the moved panel (canvas resize)
   try { setupAllSignaturePads && setupAllSignaturePads(); } catch (e) {}
   // for salary: render calendar
@@ -8134,7 +8151,7 @@ function openStructAssistant() {
   _activeToolPanel = { panel: card, parent: card.parentNode, next: card.nextSibling };
   body.appendChild(card);
   document.getElementById('toolModalTitle').textContent = 'Structural analysis AI Assistant';
-  document.getElementById('toolModal').classList.add('show');
+  openModal('toolModal');
 }
 function closeToolModalReturn() {
   if (!_activeToolPanel) return;
@@ -8147,7 +8164,7 @@ function closeToolModalReturn() {
   _activeToolPanel = null;
 }
 function closeToolModal() {
-  document.getElementById('toolModal').classList.remove('show');
+  closeModal('toolModal');
   closeToolModalReturn();
 }
 
@@ -8221,7 +8238,7 @@ function openProjectModal(projectId) {
   // Infographic canvas
   requestAnimationFrame(() => _drawProjectInfogfx(pct, fillPct, m));
 
-  document.getElementById('projectDetailModal').classList.add('show');
+  openModal('projectDetailModal');
 }
 function _drawProjectInfogfx(pct, timePct, m) {
   const cv = document.getElementById('pdInfoCanvas');
@@ -8336,10 +8353,10 @@ function editCurrentProject() {
   document.getElementById('projModalEnd').value = p.end_date || '';
   document.getElementById('projModalStatus').value = p.status || 'active';
   document.getElementById('projectModalTitle').textContent = '✏️ แก้ไขโปรเจกต์';
-  document.getElementById('projectModal').classList.add('show');
+  openModal('projectModal');
 }
 function closeProjectModalDetail() {
-  document.getElementById('projectDetailModal').classList.remove('show');
+  closeModal('projectDetailModal');
   currentProjectId = null; currentProjectMeta = null;
 }
 function switchProjTab(tab, btn) {
@@ -8359,12 +8376,12 @@ function openCreateProject() {
   document.getElementById('projModalEnd').value = '';
   document.getElementById('projModalStatus').value = 'active';
   document.getElementById('projectModalTitle').textContent = '📁 เพิ่มโปรเจกต์';
-  document.getElementById('projectModal').classList.add('show');
+  openModal('projectModal');
 }
 // Override closeProjectModal so both close the add/edit AND the detail modal safely.
 const _origCloseProjectModal = (typeof closeProjectModal === 'function') ? closeProjectModal : null;
 function closeProjectModal() {
-  document.getElementById('projectModal').classList.remove('show');
+  closeModal('projectModal');
   closeProjectModalDetail();
 }
 
