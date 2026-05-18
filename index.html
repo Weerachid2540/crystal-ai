@@ -7937,6 +7937,10 @@ async function deleteProject(id) {
   await loadProjects();
 }
 
+// Phase-2C NOTE: This openProject() is DEAD CODE — it is overridden by the
+// declaration at the bottom of the file (line ~8667) which calls openProjectModal(id).
+// Do not add logic here; add it to openProjectModal(id) instead.
+// Kept to preserve Phase 2B-1/2B-2 history and for reference.
 function openProject(id) {
   const p = allProjects.find(x => x.id === id);
   if (!p) return;
@@ -8423,6 +8427,13 @@ function openTool(tool /*, fromProject*/) {
   openModal('toolModal');
   // init signature pads in the moved panel (canvas resize)
   try { setupAllSignaturePads && setupAllSignaturePads(); } catch (e) {}
+  // Phase-2C: per-tool data reload (secondary guarantee — primary is in openProjectModal)
+  if (tool === 'daily' || tool === 'report') {
+    try { clearDailyPhotos(); loadDailyPhotos(); } catch(e) {}
+  }
+  if (tool === 'boq')     { try { loadBOQ(); } catch(e) {} }
+  if (tool === 'weekly')  { try { loadWkPhotos(); loadReportTables(); } catch(e) {} }
+  if (tool === 'monthly') { try { loadReportTables(); } catch(e) {} }
   // for salary: render calendar
   if (tool === 'salary') { try { loadSalary && loadSalary(); renderSalaryCalendar && renderSalaryCalendar(); recalcSalaryMonth && recalcSalaryMonth(); } catch (e) {} }
 }
@@ -8520,6 +8531,15 @@ function openProjectModal(projectId) {
 
   // Infographic canvas
   requestAnimationFrame(() => _drawProjectInfogfx(pct, fillPct, m));
+
+  // Phase-2C: reload all project-scoped modules now that currentProjectId is set
+  try { clearDailyPhotos(); loadDailyPhotos(); } catch(e) {}
+  try { loadBOQ(); } catch(e) {}
+  try { loadReportTables(); } catch(e) {}
+  try { loadDrafts(); } catch(e) {}
+  try { loadWkPhotos(); } catch(e) {}
+  try { chatHistory = []; if (!loadChatHistory()) renderWelcome(); } catch(e) {}
+  try { populateStructProjectPicker(); } catch(e) {}   // sync struct save picker
 
   openModal('projectDetailModal');
 }
