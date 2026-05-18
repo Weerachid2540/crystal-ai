@@ -2525,6 +2525,14 @@ function setValue(id, value) {
   if (el) el.value = value;
 }
 
+// Phase-1D: Form helpers — ลด getElementById().value pattern ซ้ำ
+function fillFormMap(map) {
+  Object.entries(map).forEach(([id, val]) => setValue(id, val));
+}
+function clearFormFields(ids) {
+  ids.forEach(id => setValue(id, ''));
+}
+
 // Phase-1C: Centralized modal helpers — ลด .classList.add/remove('show') ซ้ำ
 function openModal(id) {
   const el = document.getElementById(id);
@@ -7590,14 +7598,11 @@ function calcProjectProgress(p) {
 }
 
 function openProjectModal() {
-  document.getElementById('projModalId').value = '';
-  document.getElementById('projModalCode').value = '';
-  document.getElementById('projModalName').value = '';
-  document.getElementById('projModalLocation').value = '';
-  document.getElementById('projModalClient').value = '';
-  document.getElementById('projModalStart').value = '';
-  document.getElementById('projModalEnd').value = '';
-  document.getElementById('projModalStatus').value = 'active';
+  fillFormMap({
+    projModalId:'', projModalCode:'', projModalName:'',
+    projModalLocation:'', projModalClient:'',
+    projModalStart:'', projModalEnd:'', projModalStatus:'active'
+  });
   document.getElementById('projectModalTitle').textContent = '📁 เพิ่มโปรเจกต์';
   openModal('projectModal');
 }
@@ -7606,14 +7611,12 @@ function closeProjectModal() { closeModal('projectModal'); }
 function editProject(id) {
   const p = allProjects.find(x => x.id === id);
   if (!p) return;
-  document.getElementById('projModalId').value = p.id;
-  document.getElementById('projModalCode').value = p.code || '';
-  document.getElementById('projModalName').value = p.name || '';
-  document.getElementById('projModalLocation').value = p.location || '';
-  document.getElementById('projModalClient').value = p.client || '';
-  document.getElementById('projModalStart').value = p.start_date || '';
-  document.getElementById('projModalEnd').value = p.end_date || '';
-  document.getElementById('projModalStatus').value = p.status || 'active';
+  fillFormMap({
+    projModalId: p.id,           projModalCode: p.code || '',
+    projModalName: p.name || '', projModalLocation: p.location || '',
+    projModalClient: p.client || '', projModalStart: p.start_date || '',
+    projModalEnd: p.end_date || '', projModalStatus: p.status || 'active'
+  });
   document.getElementById('projectModalTitle').textContent = '✏ แก้ไขโปรเจกต์';
   openModal('projectModal');
 }
@@ -7727,16 +7730,16 @@ async function loadUsers() {
 let _userEditing = null;
 function openUserModal() {
   _userEditing = null;
-  document.getElementById('userModalDbId').value = '';
-  document.getElementById('userModalEmpId').value = '';
-  document.getElementById('userModalEmpId').disabled = false;
-  document.getElementById('userModalName').value = '';
-  document.getElementById('userModalRole').value = 'Site Engineer';
-  document.getElementById('userModalDept').value = '';
-  document.getElementById('userModalPhone').value = '';
-  document.getElementById('userModalPw').value = '';
-  document.getElementById('userModalPwRow').style.display = '';
-  document.getElementById('userModalPw').required = true;
+  fillFormMap({
+    userModalDbId:'', userModalEmpId:'', userModalName:'',
+    userModalRole:'Site Engineer', userModalDept:'', userModalPhone:'', userModalPw:''
+  });
+  const empIdEl = document.getElementById('userModalEmpId');
+  const pwEl    = document.getElementById('userModalPwRow');
+  const pw      = document.getElementById('userModalPw');
+  if (empIdEl) empIdEl.disabled = false;
+  if (pwEl)    pwEl.style.display = '';
+  if (pw)      pw.required = true;
   document.getElementById('userModalTitle').textContent = '👤 เพิ่มผู้ใช้';
   openModal('userModal');
 }
@@ -7746,16 +7749,17 @@ async function editUser(id) {
   const { data: u, error } = await sb.from('employees').select('*').eq('id', id).single();
   if (error) { toast('โหลดไม่สำเร็จ', 'error'); return; }
   _userEditing = u;
-  document.getElementById('userModalDbId').value = u.id;
-  document.getElementById('userModalEmpId').value = u.employee_id;
-  document.getElementById('userModalEmpId').disabled = true;
-  document.getElementById('userModalName').value = u.full_name;
-  document.getElementById('userModalRole').value = u.role;
-  document.getElementById('userModalDept').value = u.department || '';
-  document.getElementById('userModalPhone').value = u.phone || '';
-  document.getElementById('userModalPw').value = '';
-  document.getElementById('userModalPwRow').style.display = 'none';
-  document.getElementById('userModalPw').required = false;
+  fillFormMap({
+    userModalDbId: u.id,             userModalEmpId: u.employee_id,
+    userModalName: u.full_name,      userModalRole: u.role,
+    userModalDept: u.department || '', userModalPhone: u.phone || '', userModalPw: ''
+  });
+  const empIdEl = document.getElementById('userModalEmpId');
+  const pwEl    = document.getElementById('userModalPwRow');
+  const pw      = document.getElementById('userModalPw');
+  if (empIdEl) empIdEl.disabled = true;
+  if (pwEl)    pwEl.style.display = 'none';
+  if (pw)      pw.required = false;
   document.getElementById('userModalTitle').textContent = '✏ แก้ไขผู้ใช้: ' + u.employee_id;
   openModal('userModal');
 }
@@ -8344,14 +8348,12 @@ function editCurrentProject() {
   if (!currentProjectId) return;
   closeProjectModalDetail();
   const p = currentProjectMeta || {};
-  document.getElementById('projModalId').value = currentProjectId;
-  document.getElementById('projModalCode').value = p.code || '';
-  document.getElementById('projModalName').value = p.name || '';
-  document.getElementById('projModalLocation').value = p.location || '';
-  document.getElementById('projModalClient').value = p.client || '';
-  document.getElementById('projModalStart').value = p.start_date || '';
-  document.getElementById('projModalEnd').value = p.end_date || '';
-  document.getElementById('projModalStatus').value = p.status || 'active';
+  fillFormMap({
+    projModalId: currentProjectId,   projModalCode: p.code || '',
+    projModalName: p.name || '',     projModalLocation: p.location || '',
+    projModalClient: p.client || '', projModalStart: p.start_date || '',
+    projModalEnd: p.end_date || '',  projModalStatus: p.status || 'active'
+  });
   document.getElementById('projectModalTitle').textContent = '✏️ แก้ไขโปรเจกต์';
   openModal('projectModal');
 }
@@ -8367,14 +8369,11 @@ function switchProjTab(tab, btn) {
 // and closeProjectModal() refers to the add/edit modal. Keep both behaviors working.
 function openCreateProject() {
   // open the add/edit project modal (already in DOM as #projectModal)
-  document.getElementById('projModalId').value = '';
-  document.getElementById('projModalCode').value = '';
-  document.getElementById('projModalName').value = '';
-  document.getElementById('projModalLocation').value = '';
-  document.getElementById('projModalClient').value = '';
-  document.getElementById('projModalStart').value = '';
-  document.getElementById('projModalEnd').value = '';
-  document.getElementById('projModalStatus').value = 'active';
+  fillFormMap({
+    projModalId:'', projModalCode:'', projModalName:'',
+    projModalLocation:'', projModalClient:'',
+    projModalStart:'', projModalEnd:'', projModalStatus:'active'
+  });
   document.getElementById('projectModalTitle').textContent = '📁 เพิ่มโปรเจกต์';
   openModal('projectModal');
 }
