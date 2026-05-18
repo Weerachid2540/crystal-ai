@@ -7732,17 +7732,27 @@ function previewStructImg(input) {
 async function analyzeStructWithAI() {
   const text = (document.getElementById('structAiInput').value || '').trim();
   const preview = document.getElementById('structImgPreview');
-  const imgUrl = preview && preview._dataUrl;
-  if (!text && !imgUrl) { toast('กรุณาใส่รายละเอียดหรืออัปโหลดรูป', 'error'); return; }
+  const imgDataUrl = preview && preview._dataUrl;
+  if (!text && !imgDataUrl) { toast('กรุณาใส่รายละเอียดหรืออัปโหลดรูป', 'error'); return; }
   const loading = document.getElementById('loadingStructAi');
   loading.classList.add('show');
   const resultArea = document.getElementById('structAiResult');
   const target = document.getElementById('structAiResultText');
   resultArea.classList.remove('show'); target.innerHTML = '';
   try {
-    const prompt = `วิเคราะห์โครงสร้างทางวิศวกรรมต่อไปนี้แบบมืออาชีพ:\n${text || '(จากรูปภาพ)'}` +
-      (imgUrl ? '\n\n(หมายเหตุ: มีรูปภาพแนบ — ถ้า provider ไม่รองรับ vision ให้ใช้คำอธิบาย)' : '');
-    const reply = await callAPI([{ role: 'user', content: prompt }]);
+    let reply;
+    const prov = settings.provider;
+    if (imgDataUrl && prov === 'gemini') {
+      reply = await _visionGemini(imgDataUrl, text);
+    } else if (imgDataUrl && prov === 'anthropic') {
+      reply = await _visionAnthropic(imgDataUrl, text);
+    } else if (imgDataUrl && prov === 'openrouter') {
+      reply = await _visionOpenRouter(imgDataUrl, text);
+    } else {
+      if (imgDataUrl) toast('⚠️ ' + (prov === 'groq' ? 'Groq' : 'Cerebras') + ' ไม่รองรับรูปภาพ — ส่งเฉพาะข้อความ', 'warn');
+      const prompt = `วิเคราะห์โครงสร้างทางวิศวกรรมต่อไปนี้แบบมืออาชีพ (ACI / วสท.):\n${text || '(ไม่มีรายละเอียด)'}`;
+      reply = await callAPI([{ role: 'user', content: prompt }]);
+    }
     target.innerHTML = renderMarkdown(reply);
     resultArea.classList.add('show');
   } catch (err) {
@@ -7751,6 +7761,72 @@ async function analyzeStructWithAI() {
   } finally {
     loading.classList.remove('show');
   }
+}
+
+const _STRUCT_SYSTEM = 'คุณเป็น AI วิศวกรโครงสร้างผู้เชี่ยวชาญ วิเคราะห์ตามมาตรฐาน ACI / วสท. แสดงขั้นตอนคำนวณ ตอบเป็นภาษาไทย';
+const _STRUCT_PROMPT = (text) => `วิเคราะห์โครงสร้างทางวิศวกรรมในรูปภาพนี้แบบละเอียด${text ? ':\n' + text : ' — ระบุประเภทโครงสร้าง, แรงกระทำ, Reaction, ค่า Max Shear และ Max Moment'}`;
+
+async function _visionGemini(dataUrl, text) {
+  const key = settings.keys.gemini || '';
+  if (!key) throw new Error('ไม่มี Gemini API Key — กรุณาตั้งค่าใน ⚙');
+  const [header, b64] = dataUrl.split(',');
+  const mimeType = header.match(/data:([^;]+)/)[1] || 'image/png';
+  const model = settings.models.gemini || 'gemini-2.0-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: _STRUCT_PROMPT(text) }, { inlineData: { mimeType, data: b64 } }] }],
+      systemInstruction: { parts: [{ text: _STRUCT_SYSTEM }] },
+      generationConfig: { temperature: 0.4, maxOutputTokens: 4096 }
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || 'Gemini vision error');
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+async function _visionAnthropic(dataUrl, text) {
+  const key = settings.keys.anthropic || '';
+  if (!key) throw new Error('ไม่มี Anthropic API Key — กรุณาตั้งค่าใน ⚙');
+  const [header, b64] = dataUrl.split(',');
+  const mediaType = (header.match(/data:([^;]+)/)[1] || 'image/png');
+  const model = settings.models.anthropic || 'claude-sonnet-4-20250514';
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({
+      model, max_tokens: 4096, system: _STRUCT_SYSTEM,
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } },
+        { type: 'text', text: _STRUCT_PROMPT(text) }
+      ]}]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || 'Anthropic vision error');
+  return data.content?.[0]?.text || '';
+}
+
+async function _visionOpenRouter(dataUrl, text) {
+  const key = settings.keys.openrouter || '';
+  if (!key) throw new Error('ไม่มี OpenRouter API Key — กรุณาตั้งค่าใน ⚙');
+  const model = settings.models.openrouter || 'meta-llama/llama-3.2-90b-vision-instruct:free';
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}`, 'HTTP-Referer': location.origin || 'https://crystal-ai.local', 'X-Title': 'Crystal AI' },
+    body: JSON.stringify({
+      model, max_tokens: 4096,
+      messages: [
+        { role: 'system', content: _STRUCT_SYSTEM },
+        { role: 'user', content: [{ type: 'text', text: _STRUCT_PROMPT(text) }, { type: 'image_url', image_url: { url: dataUrl } }] }
+      ]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || 'OpenRouter vision error');
+  return data.choices?.[0]?.message?.content || '';
 }
 
 // Tool modal
