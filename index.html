@@ -682,18 +682,21 @@
   /* Left hero panel */
   .auth-left {
     flex: 1; position: relative;
-    background: linear-gradient(135deg, var(--surface) 0%, #0d1f35 100%);
+    background: #0a1628;
     display: flex; align-items: center; justify-content: center; overflow: hidden;
   }
-  /* FIXED v5.1: ./5.jpg may be missing — JS sets backgroundImage on load — BUG-2 */
   .auth-left::before {
     content: ''; position: absolute; inset: 0;
+    background-image: url('./bg-auth.png');
     background-position: center; background-size: cover; background-repeat: no-repeat;
-    opacity: 0.2;
+    opacity: 1;
   }
+  /* Dark gradient overlay — ให้ข้อความอ่านออก + ขอบซ้าย-ขวา blend */
   .auth-left::after {
     content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at center, rgba(245,158,11,0.08) 0%, transparent 70%);
+    background:
+      linear-gradient(to right, rgba(10,22,40,0.15) 0%, rgba(10,22,40,0.55) 100%),
+      linear-gradient(to top, rgba(10,22,40,0.7) 0%, transparent 50%, rgba(10,22,40,0.4) 100%);
     animation: glowPulse 6s ease-in-out infinite;
   }
   @keyframes glowPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
@@ -7553,17 +7556,7 @@ function initAuthLogo() {
     };
     authLogo.style.display = '';
   }
-  const img5 = new Image();
-  img5.onload = () => {
-    const authLeft = document.querySelector('.auth-left');
-    if (authLeft) {
-      authLeft.style.setProperty('--auth-bg', "url('./5.jpg')");
-    }
-    const style = document.createElement('style');
-    style.textContent = ".auth-left::before { background-image: url('./5.jpg'); }";
-    document.head.appendChild(style);
-  };
-  img5.src = './5.jpg';
+  // bg-auth.png is set via CSS directly — no JS override needed
 }
 
 // FIXED v5.1: Auth stability — BUG-3
