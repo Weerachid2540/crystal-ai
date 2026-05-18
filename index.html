@@ -3342,7 +3342,7 @@ async function sendChat() {
     // Try to auto-switch project if user mentioned a different project's code/name
     const switched = _maybeSwitchProjectFromMsg(msg);
     if (switched) {
-      try { loadBOQ(); loadReportTables(); loadDrafts(); loadWkPhotos(); loadSalary(); } catch(e) {}
+      try { loadBOQ(); loadReportTables(); loadDrafts(); loadWkPhotos(); loadSalary(); loadDailyPhotos(); } catch(e) {}
       setView('project');
     }
   }
@@ -3577,6 +3577,7 @@ Format with clear headings, suitable for management review.`;
 const MAX_DAILY_IMAGES = 20;
 const PHOTO_MAX_DIM = 1280;       // resize longest side to 1280px
 const PHOTO_JPEG_QUALITY = 0.85;
+const DAILY_PHOTO_KEY = 'crystal_daily_photos';
 let dailyImages = [];             // [{ id, dataUrl, name }]
 let dailyPhotoIdCounter = 0;
 
@@ -3632,12 +3633,16 @@ async function handleDailyPhotoUpload(input) {
     }
   }
   renderDailyPhotoGrid();
-  if (added > 0) toast(currentLang === 'en' ? `✓ Added ${added} photo(s)` : `✓ แนบ ${added} รูปแล้ว`, 'success');
+  if (added > 0) {
+    saveDailyPhotos();
+    toast(currentLang === 'en' ? `✓ Added ${added} photo(s)` : `✓ แนบ ${added} รูปแล้ว`, 'success');
+  }
 }
 
 function removeDailyPhoto(id) {
   dailyImages = dailyImages.filter(p => p.id !== id);
   renderDailyPhotoGrid();
+  saveDailyPhotos();
 }
 
 function renderDailyPhotoGrid() {
@@ -3685,6 +3690,26 @@ function closePhotoPreview() {
 
 function clearDailyPhotos() {
   dailyImages = [];
+  dailyPhotoIdCounter = 0;
+  renderDailyPhotoGrid();
+  try { localStorage.removeItem(DAILY_PHOTO_KEY); } catch(e) {}
+}
+
+function saveDailyPhotos() {
+  try {
+    localStorage.setItem(DAILY_PHOTO_KEY, JSON.stringify(dailyImages));
+  } catch (e) {
+    if (e && e.name === 'QuotaExceededError') {
+      toast(currentLang === 'en' ? '⚠️ Storage full — delete some photos' : '⚠️ พื้นที่เก็บรูปเต็ม — ลบรูปบางส่วนเพื่อประหยัดพื้นที่', 'warning');
+    }
+  }
+}
+
+function loadDailyPhotos() {
+  const saved = safeJsonParse(localStorage.getItem(DAILY_PHOTO_KEY), []);
+  if (!Array.isArray(saved) || !saved.length) return;
+  dailyImages = saved.filter(p => p && p.id && p.dataUrl);
+  dailyPhotoIdCounter = dailyImages.reduce((m, p) => Math.max(m, p.id), 0);
   renderDailyPhotoGrid();
 }
 
@@ -7672,6 +7697,7 @@ function openProject(id) {
   try { loadDrafts(); } catch(e) {}
   try { loadWkPhotos(); } catch(e) {}
   try { loadSalary(); } catch(e) {}
+  try { loadDailyPhotos(); } catch(e) {}
   try {
     chatHistory = [];
     if (!loadChatHistory()) renderWelcome();
