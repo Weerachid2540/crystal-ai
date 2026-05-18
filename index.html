@@ -1371,6 +1371,7 @@
             </div>
             <div class="struct-result" id="cb_result"></div>
             <div class="struct-diagrams" id="cb_diagrams">
+              <div class="diag-card"><div class="diag-title">FBD — Free Body Diagram</div><canvas class="diag-canvas" id="cb_fbd" width="700" height="200"></canvas></div>
               <div class="diag-card"><div class="diag-title">SFD — Shear Force Diagram</div><canvas class="diag-canvas" id="cb_sfd" width="700" height="160"></canvas></div>
               <div class="diag-card"><div class="diag-title">BMD — Bending Moment Diagram</div><canvas class="diag-canvas" id="cb_bmd" width="700" height="160"></canvas></div>
             </div>
@@ -8429,8 +8430,10 @@ function resetContBeam() {
   _renderContSpanInputs(_beamSpanCount);
   document.getElementById('cb_result').innerHTML = '';
   document.getElementById('cb_diagrams').classList.remove('show');
+  const cvF = document.getElementById('cb_fbd');
   const cvS = document.getElementById('cb_sfd');
   const cvB = document.getElementById('cb_bmd');
+  if (cvF) cvF.getContext('2d').clearRect(0,0,cvF.width,cvF.height);
   if (cvS) cvS.getContext('2d').clearRect(0,0,cvS.width,cvS.height);
   if (cvB) cvB.getContext('2d').clearRect(0,0,cvB.width,cvB.height);
 }
@@ -8554,12 +8557,108 @@ function calcContBeam() {
     <div class="struct-disclaimer">${STRUCT_DISCLAIMER}</div>`;
   _renderResult('cb_result', html, `Cont.Beam ${n} spans`);
 
-  // Draw SFD + BMD
+  // Draw FBD + SFD + BMD
   try {
+    _drawContBeamFBD(document.getElementById('cb_fbd'), spans, M, R);
     _drawContBeamSFD(document.getElementById('cb_sfd'), spans, M, R);
     _drawContBeamBMD(document.getElementById('cb_bmd'), spans, M, R);
     document.getElementById('cb_diagrams').classList.add('show');
   } catch(e) { console.error('cont beam diagram error', e); }
+}
+
+function _drawContBeamFBD(canvas, spans, M, R) {
+  if (!canvas) return;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const n = spans.length;
+  const totalL = spans.reduce((s, sp) => s + sp.L, 0);
+  const PAD = { l: 40, r: 40, t: 20, b: 50 };
+  const PW = W - PAD.l - PAD.r;
+  const beamY = PAD.t + 70; // beam centerline y
+
+  // helper: global x → canvas x
+  const cx = xG => PAD.l + (xG / totalL) * PW;
+
+  // accumulate span starts
+  const starts = [0];
+  spans.forEach(sp => starts.push(starts[starts.length - 1] + sp.L));
+
+  // ── UDL blocks per span ──
+  spans.forEach((sp, k) => {
+    const x1 = cx(starts[k]), x2 = cx(starts[k + 1]);
+    const udlH = 36;
+    ctx.fillStyle = 'rgba(16,185,129,0.15)';
+    ctx.fillRect(x1, beamY - 8 - udlH, x2 - x1, udlH);
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 1;
+    ctx.strokeRect(x1, beamY - 8 - udlH, x2 - x1, udlH);
+    // downward arrows inside UDL
+    ctx.fillStyle = '#10b981';
+    const step = Math.max(18, (x2 - x1) / 7);
+    for (let xi = x1 + 10; xi < x2 - 6; xi += step) {
+      ctx.beginPath();
+      ctx.moveTo(xi, beamY - 8); ctx.lineTo(xi - 4, beamY - 16); ctx.lineTo(xi + 4, beamY - 16);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(xi, beamY - 16); ctx.lineTo(xi, beamY - 8 - udlH + 2);
+      ctx.stroke();
+    }
+    // w label above block
+    ctx.font = '10px IBM Plex Mono'; ctx.fillStyle = '#10b981'; ctx.textAlign = 'center';
+    ctx.fillText(`w${k+1}=${sp.w} kN/m`, (x1+x2)/2, beamY - 8 - udlH - 4);
+  });
+
+  // ── Beam body ──
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(PAD.l, beamY - 8, PW, 16);
+  ctx.strokeStyle = '#d97706'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(PAD.l, beamY - 8, PW, 16);
+
+  // ── Span length dimension lines ──
+  ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+  spans.forEach((sp, k) => {
+    const x1 = cx(starts[k]), x2 = cx(starts[k+1]);
+    const dimY = beamY + 28;
+    ctx.beginPath(); ctx.moveTo(x1, dimY); ctx.lineTo(x2, dimY); ctx.stroke();
+    // tick marks
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(x1, dimY-4); ctx.lineTo(x1, dimY+4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2, dimY-4); ctx.lineTo(x2, dimY+4); ctx.stroke();
+    ctx.setLineDash([3,3]);
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText(`L${k+1}=${sp.L}m`, (x1+x2)/2, dimY + 12);
+  });
+  ctx.setLineDash([]);
+
+  // ── Supports & reactions ──
+  R.forEach((r, i) => {
+    const xG = starts[i];
+    const xC = cx(xG);
+    // support symbol (pin for all in continuous beam)
+    ctx.strokeStyle = '#9ca3af'; ctx.fillStyle = '#2a3f5f'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(xC, beamY + 8); ctx.lineTo(xC - 10, beamY + 24); ctx.lineTo(xC + 10, beamY + 24);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // hatch
+    ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 1;
+    for (let d = -12; d <= 12; d += 5) {
+      ctx.beginPath(); ctx.moveTo(xC + d, beamY + 24); ctx.lineTo(xC + d - 3, beamY + 29); ctx.stroke();
+    }
+    // reaction arrow (upward)
+    const arrowH = 38;
+    ctx.strokeStyle = '#ef4444'; ctx.fillStyle = '#ef4444'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xC, beamY + 24 + arrowH); ctx.lineTo(xC, beamY + 24 + 4); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(xC, beamY + 8); ctx.lineTo(xC - 5, beamY + 16); ctx.lineTo(xC + 5, beamY + 16);
+    ctx.closePath(); ctx.fill();
+    // reaction value label
+    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 10px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText(`R${i}=${r.toFixed(1)}`, xC, beamY + 24 + arrowH + 11);
+  });
+
+  // ── Title ──
+  ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 11px Sarabun'; ctx.textAlign = 'left';
+  ctx.fillText(`FBD — คานต่อเนื่อง ${n} ช่วง`, PAD.l, PAD.t + 10);
 }
 
 function _drawContBeamDiagram(canvas, spans, getY, label, colorPos, colorNeg) {
