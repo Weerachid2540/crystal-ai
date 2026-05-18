@@ -622,10 +622,16 @@
     border-bottom: 1px solid var(--border);
   }
 
+  .struct-card { overflow-y: auto !important; max-height: 85vh; }
   .struct-card .dash-struct-panel { display: none; padding: 16px; }
   .struct-card .dash-struct-panel.active { display: block; }
   .struct-card .struct-subtabs { padding: 8px 12px 0; margin-bottom: 0; }
   .struct-card .struct-form { margin: 6px 0 12px; }
+  /* ให้ diagrams แสดงเต็มที่ ไม่ถูกตัด */
+  .struct-diagrams { margin-top: 16px; }
+  .diag-card { margin-bottom: 8px; }
+  .diag-title { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 6px; letter-spacing: 1px; }
+  .diag-canvas { width: 100%; height: auto; }
   .upload-preview { margin-top: 8px; }
   .upload-preview img { max-width: 100%; max-height: 220px; border: 1px solid var(--border); border-radius: var(--radius); }
 
