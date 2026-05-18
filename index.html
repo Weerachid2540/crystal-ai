@@ -2506,6 +2506,25 @@ function safeJsonParse(str, fallback) {
   }
 }
 
+// Phase-1B: Deep clone helper — ป้องกัน crash ถ้า object มีค่าแปลก
+function deepClone(obj) {
+  try { return JSON.parse(JSON.stringify(obj)); } catch (e) {
+    console.warn('[Crystal] deepClone failed, returning original:', e.message);
+    return obj;
+  }
+}
+
+// Phase-1B: Safe DOM helpers — ป้องกัน null access
+function getEl(id) { return document.getElementById(id); }
+function getValue(id, fallback = '') {
+  const el = document.getElementById(id);
+  return el ? el.value : fallback;
+}
+function setValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value;
+}
+
 // FIXED #2: คืนวันที่แบบ local timezone — ไม่ใช้ toISOString() ที่เป็น UTC
 // FIXED v5.1: accept Date/string/number inputs without falling back to today — BUG-6
 function localDate(date) {
@@ -2777,7 +2796,7 @@ const I18N = {
 
 // FIXED #4: validate currentLang against known values
 const _storedLang = localStorage.getItem('crystal_lang');
-let currentLang = (I18N[_storedLang]) ? _storedLang : 'mix';
+let currentLang = (I18N[_storedLang]) ? _storedLang : 'th';
 
 function tr(key) { return I18N[currentLang][key] || I18N.mix[key] || key; }
 // alias: many existing calls use t() — keep both, but tr() is the canonical now to avoid shadowing
@@ -3361,7 +3380,7 @@ async function sendChat() {
 }
 
 function quickPrompt(text) {
-  document.getElementById('chatInput').value = text;
+  setValue('chatInput', text);
   sendChat();
 }
 
@@ -3860,7 +3879,7 @@ const SALARY_DEFAULT_CONFIG = {
     { id: 31, label: 'หักประกันสังคม', amount: 875 }
   ]
 };
-let salaryConfig = JSON.parse(JSON.stringify(SALARY_DEFAULT_CONFIG));
+let salaryConfig = deepClone(SALARY_DEFAULT_CONFIG);
 let salaryCalendar = {};        // { "2026-04": { "1": { sites:[1], otId:11 } } }
 let salaryCurMonth = null;      // { year, month } 0-indexed month
 let salaryEditingDay = null;
@@ -4156,7 +4175,7 @@ function saveSalarySettings() {
 
 function resetSalaryConfigToDefault() {
   if (!confirm(currentLang === 'en' ? 'Reset to example config? Current settings will be lost.' : 'คืนค่าตัวอย่าง? การตั้งค่าปัจจุบันจะหายไป')) return;
-  salaryConfig = JSON.parse(JSON.stringify(SALARY_DEFAULT_CONFIG));
+  salaryConfig = deepClone(SALARY_DEFAULT_CONFIG);
   saveSalaryConfig();
   openSalarySettings();
   toast(currentLang === 'en' ? '✓ Reset to example' : '✓ คืนค่าตัวอย่างแล้ว', 'success');
@@ -5891,7 +5910,7 @@ s = Av·fy_s·d/Vs = ${st.s} mm  (s_max=min(d/2,600)=${_fmt(Math.min(d/2,600),0)
 function calcColumn() {
   const b = _num('cl_b'), h = _num('cl_h'), Lu = _num('cl_Lu'), Pu = _num('cl_Pu'),
         fc = _num('cl_fc'), fy = _num('cl_fy'),
-        type = document.getElementById('cl_type').value;
+        type = getValue('cl_type', 'tied');
   if (!b || !h || !Lu || !Pu || !fc || !fy) { toast('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
   const Ag = b * h;                                          // mm²
   const r = 0.3 * h;                                         // radius of gyration
@@ -5943,7 +5962,7 @@ function calcSlab() {
   const Lx = _num('sl_Lx'), Ly = _num('sl_Ly'), t = _num('sl_t'),
         wD = _num('sl_wD'), wL = _num('sl_wL'),
         fc = _num('sl_fc'), fy = _num('sl_fy'),
-        userType = document.getElementById('sl_type').value;
+        userType = getValue('sl_type', 'auto');
   if (!Lx || !Ly || !t || !fc || !fy) { toast('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
   const ratio = Ly / Lx;
   const slabType = userType === 'auto' ? (ratio > 2 ? 'oneway' : 'twoway') : userType;
