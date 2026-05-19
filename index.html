@@ -8551,15 +8551,9 @@ function openProjectModal(projectId) {
   // Infographic canvas
   requestAnimationFrame(() => _drawProjectInfogfx(pct, fillPct, m));
 
-  // Phase-2C: reload all project-scoped modules now that currentProjectId is set
-  try { _resetDailyPhotosMemory(); loadDailyPhotos(); } catch(e) {}
-  try { loadBOQ(); } catch(e) {}
-  try { loadReportTables(); } catch(e) {}
-  try { loadDrafts(); } catch(e) {}
-  try { loadWkPhotos(); } catch(e) {}
-  try { chatHistory = []; if (!loadChatHistory()) renderWelcome(); } catch(e) {}
-  try { populateStructProjectPicker(); } catch(e) {}   // sync struct save picker
-
+  // Phase-3C: manual loads removed — crystalProjectOpen event (dispatched below)
+  // covers all modules identically via _bindProjectEvents(). openTool() per-tool
+  // reloads are kept as refresh-on-focus (not covered by project-open event).
   emitProjectOpen(currentProjectMeta, 'openProjectModal');  // Phase-3B
   openModal('projectDetailModal');
 }
@@ -8804,7 +8798,7 @@ function _bindProjectEvents() {
     catch(err) { console.warn('[ProjectEvent] reports:', err.message); }
     try { loadWkPhotos(); _pEvtLog('LOAD wk-photos OK'); }
     catch(err) { console.warn('[ProjectEvent] wk-photos:', err.message); }
-    try { if (!loadChatHistory()) renderWelcome(); _pEvtLog('LOAD chat OK'); }
+    try { chatHistory = []; if (!loadChatHistory()) renderWelcome(); _pEvtLog('LOAD chat OK'); }
     catch(err) { console.warn('[ProjectEvent] chat:', err.message); }
     try {
       populateStructProjectPicker();
