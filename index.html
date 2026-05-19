@@ -3729,6 +3729,14 @@ function clearDailyPhotos() {
   try { localStorage.removeItem(DAILY_PHOTO_KEY); } catch(e) {}
 }
 
+// Phase-3B: clears in-memory state ONLY — does NOT touch localStorage.
+// Use in project-open flows instead of clearDailyPhotos() to avoid deleting photos.
+function _resetDailyPhotosMemory() {
+  dailyImages = [];
+  dailyPhotoIdCounter = 0;
+  renderDailyPhotoGrid();
+}
+
 function saveDailyPhotos() {
   try {
     localStorage.setItem(DAILY_PHOTO_KEY, JSON.stringify(dailyImages));
@@ -8440,7 +8448,7 @@ function openTool(tool /*, fromProject*/) {
   try { setupAllSignaturePads && setupAllSignaturePads(); } catch (e) {}
   // Phase-2C: per-tool data reload (secondary guarantee — primary is in openProjectModal)
   if (tool === 'daily' || tool === 'report') {
-    try { clearDailyPhotos(); loadDailyPhotos(); } catch(e) {}
+    try { _resetDailyPhotosMemory(); loadDailyPhotos(); } catch(e) {}
   }
   if (tool === 'boq')     { try { loadBOQ(); } catch(e) {} }
   if (tool === 'weekly')  { try { loadWkPhotos(); loadReportTables(); } catch(e) {} }
@@ -8544,7 +8552,7 @@ function openProjectModal(projectId) {
   requestAnimationFrame(() => _drawProjectInfogfx(pct, fillPct, m));
 
   // Phase-2C: reload all project-scoped modules now that currentProjectId is set
-  try { clearDailyPhotos(); loadDailyPhotos(); } catch(e) {}
+  try { _resetDailyPhotosMemory(); loadDailyPhotos(); } catch(e) {}
   try { loadBOQ(); } catch(e) {}
   try { loadReportTables(); } catch(e) {}
   try { loadDrafts(); } catch(e) {}
@@ -8552,6 +8560,7 @@ function openProjectModal(projectId) {
   try { chatHistory = []; if (!loadChatHistory()) renderWelcome(); } catch(e) {}
   try { populateStructProjectPicker(); } catch(e) {}   // sync struct save picker
 
+  emitProjectOpen(currentProjectMeta, 'openProjectModal');  // Phase-3B
   openModal('projectDetailModal');
 }
 function _drawProjectInfogfx(pct, timePct, m) {
@@ -8668,6 +8677,7 @@ function editCurrentProject() {
   openModal('projectModal');
 }
 function closeProjectModalDetail() {
+  emitProjectClose('closeProjectModalDetail');  // Phase-3B
   closeModal('projectDetailModal');
   currentProjectId = null; currentProjectMeta = null;
 }
@@ -8751,6 +8761,71 @@ async function safeApiCall(fn, errorMsg) {
 }
 
 // ============================================================
+// 12B. PROJECT CONTEXT EVENT SYSTEM (Phase-3B)
+// ============================================================
+const PROJECT_EVENT_DEBUG = false;
+
+function _pEvtLog(...args) {
+  if (PROJECT_EVENT_DEBUG) console.log('[ProjectEvent]', ...args);
+}
+
+function emitProjectOpen(meta, source) {
+  _pEvtLog('OPEN', meta?.id, '←', source);
+  window.dispatchEvent(new CustomEvent('crystalProjectOpen', {
+    detail: { id: meta?.id ?? null, meta: meta ?? null, source, timestamp: Date.now() }
+  }));
+}
+
+function emitProjectClose(source) {
+  _pEvtLog('CLOSE', '←', source);
+  window.dispatchEvent(new CustomEvent('crystalProjectClose', {
+    detail: { id: null, meta: null, source, timestamp: Date.now() }
+  }));
+}
+
+function emitProjectChanged(meta, source) {
+  _pEvtLog('CHANGED', meta?.id, '←', source);
+  window.dispatchEvent(new CustomEvent('crystalProjectChanged', {
+    detail: { id: meta?.id ?? null, meta: meta ?? null, source, timestamp: Date.now() }
+  }));
+}
+
+function _bindProjectEvents() {
+  if (window.__crystalProjectEventsBound) return;
+  window.__crystalProjectEventsBound = true;
+
+  window.addEventListener('crystalProjectOpen', (e) => {
+    _pEvtLog('→ loading modules for project', e.detail.id);
+    try { _resetDailyPhotosMemory(); loadDailyPhotos(); _pEvtLog('LOAD daily-photos OK'); }
+    catch(err) { console.warn('[ProjectEvent] daily-photos:', err.message); }
+    try { loadBOQ(); _pEvtLog('LOAD boq OK'); }
+    catch(err) { console.warn('[ProjectEvent] boq:', err.message); }
+    try { loadReportTables(); loadDrafts(); _pEvtLog('LOAD reports+drafts OK'); }
+    catch(err) { console.warn('[ProjectEvent] reports:', err.message); }
+    try { loadWkPhotos(); _pEvtLog('LOAD wk-photos OK'); }
+    catch(err) { console.warn('[ProjectEvent] wk-photos:', err.message); }
+    try { if (!loadChatHistory()) renderWelcome(); _pEvtLog('LOAD chat OK'); }
+    catch(err) { console.warn('[ProjectEvent] chat:', err.message); }
+    try {
+      populateStructProjectPicker();
+      const hp = document.getElementById('structHistoryPanel');
+      if (hp && hp.style.display !== 'none') renderStructHistory();
+      _pEvtLog('LOAD struct-picker OK');
+    } catch(err) { console.warn('[ProjectEvent] struct-picker:', err.message); }
+  });
+
+  window.addEventListener('crystalProjectClose', () => {
+    _pEvtLog('→ clearing project UI');
+    try { clearDailyPhotos(); _pEvtLog('CLEAR daily-photos OK'); }
+    catch(err) { console.warn('[ProjectEvent] clear daily-photos:', err.message); }
+  });
+
+  window.addEventListener('crystalProjectChanged', (e) => {
+    _pEvtLog('→ project switched to', e.detail.id, '(modules loading via crystalProjectOpen)');
+  });
+}
+
+// ============================================================
 // 13. INIT
 // ============================================================
 function init() {
@@ -8789,6 +8864,8 @@ function init() {
 
   // Phase 1: Project-scoped modules (BOQ/Weekly/Monthly/Drafts) will be loaded
   // when a project is opened — see openProject().
+
+  _bindProjectEvents();  // Phase-3B: register project context event subscribers
 
   // FIXED v5.1: setup auth listener before checkAuthOnLoad — BUG-3
   _setupAuthStateListener();
