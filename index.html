@@ -22,6 +22,7 @@
 <script src="js/storage.js"></script>
 <script src="js/api.js"></script>
 <script src="js/settings-ui.js"></script>
+<script src="js/reset.js"></script>
 <style>
   :root {
     /* === v5 Color System === */
@@ -4656,37 +4657,8 @@ function clearForm(panelId) {
 }
 
 // ============================================================
-// 10. RESET / PRIVACY (FIXED #24)
-// ============================================================
-function resetDrafts() {
-  if (!confirm(tr('confirm_reset_drafts'))) return;
-  DRAFT_PANELS.forEach(pid => localStorage.removeItem('crystal_draft_' + pid));
-  localStorage.removeItem('crystal_boq');
-  toast(currentLang === 'en' ? '✓ All drafts deleted' : '✓ ลบ drafts ทั้งหมดแล้ว', 'success');
-  setTimeout(() => location.reload(), 800);
-}
-
-function resetChat() {
-  if (!confirm(tr('confirm_reset_chat'))) return;
-  localStorage.removeItem('crystal_chat');
-  chatHistory = [];
-  renderWelcome();
-  updateChatInfo();
-  toast(currentLang === 'en' ? '✓ Chat history deleted' : '✓ ลบประวัติแชทแล้ว', 'success');
-}
-
-function resetAll() {
-  if (!confirm(tr('confirm_reset_all'))) return;
-  // ลบทุก key ที่ขึ้นต้นด้วย crystal_
-  const keys = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (k && k.startsWith('crystal_')) keys.push(k);
-  }
-  keys.forEach(k => localStorage.removeItem(k));
-  toast(currentLang === 'en' ? '✓ Reset complete — reloading...' : '✓ Reset เรียบร้อย — กำลังรีโหลด...', 'success');
-  setTimeout(() => location.reload(), 1000);
-}
+// [§10 RESET / PRIVACY — Phase-4D-5: extracted to js/reset.js]
+// resetDrafts(), resetChat(), resetAll()
 
 // ============================================================
 // 11. SIDEBAR + TABS + KEYBOARD (FIXED #6 shadowing, #21 ESC)
