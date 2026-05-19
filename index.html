@@ -3376,7 +3376,9 @@ async function sendChat() {
     // Try to auto-switch project if user mentioned a different project's code/name
     const switched = _maybeSwitchProjectFromMsg(msg);
     if (switched) {
-      try { loadBOQ(); loadReportTables(); loadDrafts(); loadWkPhotos(); loadSalary(); loadDailyPhotos(); } catch(e) {}
+      // Phase-4A: _resetDailyPhotosMemory() before loadDailyPhotos() — prevent old
+      // project's photos persisting when new project has no saved photos
+      try { loadBOQ(); loadReportTables(); loadDrafts(); loadWkPhotos(); loadSalary(); _resetDailyPhotosMemory(); loadDailyPhotos(); } catch(e) {}
       setView('project');
     }
   }
@@ -7954,47 +7956,6 @@ async function deleteProject(id) {
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   toast('ลบเรียบร้อย', 'success');
   await loadProjects();
-}
-
-// Phase-2C NOTE: This openProject() is DEAD CODE — it is overridden by the
-// declaration at the bottom of the file (line ~8667) which calls openProjectModal(id).
-// Do not add logic here; add it to openProjectModal(id) instead.
-// Kept to preserve Phase 2B-1/2B-2 history and for reference.
-function openProject(id) {
-  const p = allProjects.find(x => x.id === id);
-  if (!p) return;
-  currentProjectId = id;
-  currentProjectMeta = p;
-  try { localStorage.setItem('crystal_current_project', id); } catch(e) {}
-  goView('project');
-  // Refresh modules to load project-scoped storage
-  try { loadBOQ(); } catch(e) {}
-  try { loadReportTables(); } catch(e) {}
-  try { loadDrafts(); } catch(e) {}
-  try { loadWkPhotos(); } catch(e) {}
-  try { loadSalary(); } catch(e) {}
-  try { loadDailyPhotos(); } catch(e) {}
-  try {
-    chatHistory = [];
-    if (!loadChatHistory()) renderWelcome();
-  } catch(e) {}
-  // FIXED v5.1: Weekly Report auto-fill — BUG-5
-  try {
-    if (currentProjectMeta) {
-      const p = currentProjectMeta;
-      const fields = {
-        'wk_proj':      p.name || '',
-        'wk_proj_code': p.code || '',
-        'wk_client':    p.client || '',
-      };
-      Object.entries(fields).forEach(([id, val]) => {
-        const el = document.getElementById(id);
-        if (el && !el.value) el.value = val;
-      });
-    }
-  } catch(e) {}
-  updateProjectContextUI();
-  switchTab('overview');
 }
 
 // ---- USER MANAGEMENT ----
