@@ -35,6 +35,7 @@
 <script src="js/salary.js"></script>
 <script src="js/structural.js"></script>
 <script src="js/project-events.js"></script>
+<script src="js/dashboard.js"></script>
 <style>
   :root {
     /* === v5 Color System === */
@@ -2753,105 +2754,10 @@ function syncAppState(view) {
 
 // Phase-4C: requireProjectContext() → extracted to js/utils.js
 
-function updateProjectContextUI() {
-  const p = currentProjectMeta;
-  const projectText = p ? `${p.code || p.id} — ${p.name || ''}` : 'No project selected';
-  const scopeBadge = document.getElementById('projectScopeBadge');
-  if (scopeBadge) scopeBadge.textContent = p ? `project_id: ${currentProjectId}` : 'project_id: —';
-  const desc = document.getElementById('projectOverviewDesc');
-  if (desc) desc.textContent = p
-    ? `${p.name || ''}${p.client ? ' · ' + p.client : ''}${p.location ? ' · ' + p.location : ''}`
-    : 'เลือก module จาก sidebar เพื่อเริ่มงานในโปรเจกต์นี้';
-  const aiCtx = document.getElementById('projectAiContext');
-  if (aiCtx) aiCtx.textContent = 'AI Assistant · ' + projectText;
-  document.querySelectorAll('.project-badge').forEach(badge => {
-    const label = badge.querySelector('.proj-label');
-    const name = badge.querySelector('.proj-name');
-    if (!label || !name) return;
-    label.textContent = p ? (p.code || 'PROJECT') : 'COMPANY';
-    name.textContent = p ? (p.name || 'Untitled project') : 'Crystal Engineering Corp.';
-  });
-}
-
-function focusDashboardProjectSearch() {
-  const grid = document.getElementById('projectGrid');
-  if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function openMostRecentProject() {
-  if (!allProjects.length) {
-    toast('ยังไม่มีโปรเจกต์บน Dashboard', 'info');
-    return;
-  }
-  openProject(allProjects[0].id);
-}
-
-// FIXED v6: module facades over the existing single-file implementation.
-const Sidebar = {
-  select: (moduleName) => switchTab(moduleName)
-};
-const DashboardView = {
-  open: () => goView('dashboard'),
-  refresh: () => loadProjects()
-};
-const ProjectView = {
-  open: (projectId) => openProject(projectId),
-  requireProject: requireProjectContext
-};
-const ReportModule = {
-  daily: generateDailyReport,
-  weekly: generateWeeklyReport,
-  monthly: generateMonthlyReport
-};
-
-// ---- View router ----
-function setView(view) {
-  if (view === 'structtool' && !currentProjectId) {
-    view = 'dashboard';
-  }
-  currentView = view;
-  syncAppState(view);
-  document.body.setAttribute('data-view', view);
-  // crumb visibility
-  const sep = document.getElementById('crumbSep');
-  const cur = document.getElementById('crumbCurrent');
-  if (view === 'project' && currentProjectMeta) {
-    sep.style.display = '';
-    cur.style.display = '';
-    cur.textContent = '📁 ' + currentProjectMeta.code + ' — ' + currentProjectMeta.name;
-  } else if (view === 'personal') {
-    sep.style.display = '';
-    cur.style.display = '';
-    cur.textContent = '👤 ส่วนตัว';
-  } else if (view === 'users') {
-    sep.style.display = '';
-    cur.style.display = '';
-    cur.textContent = '👥 จัดการผู้ใช้';
-  } else if (view === 'structtool') {
-    sep.style.display = '';
-    cur.style.display = '';
-    cur.textContent = '🏗 Structural Analysis';
-  } else {
-    sep.style.display = 'none';
-    cur.style.display = 'none';
-  }
-  // dashboard crumb active state
-  document.getElementById('crumbDashboard').classList.toggle('active', view === 'dashboard');
-  const salaryCrumb = document.getElementById('crumbSalary');
-  if (salaryCrumb) salaryCrumb.classList.toggle('active', view === 'personal');
-  updateProjectContextUI();
-}
-
-async function goView(view) {
-  if (view === 'dashboard') {
-    currentProjectId = null; currentProjectMeta = null;
-    setView('dashboard'); await loadProjects(); renderDashboardWelcome(); return;
-  }
-  if (view === 'users') { setView('users'); await loadUsers(); return; }
-  if (view === 'auth')  { setView('auth'); return; }
-  // v6: project / personal / structtool views removed → use dashboard
-  return goView('dashboard');
-}
+// [§Dashboard helpers + View Router — Phase-4N-2: extracted to js/dashboard.js]
+// updateProjectContextUI, setView, goView
+// DELETED dead code: focusDashboardProjectSearch, openMostRecentProject,
+// Sidebar/DashboardView/ProjectView/ReportModule facades
 
 // ---- AUTH ----
 function _empIdToEmail(empId) { return empId.trim().toLowerCase().replace('-','') + '@crystal.local'; }
@@ -3269,93 +3175,9 @@ function _setupAuthStateListener() {
   });
 }
 
-// ============================================================
-// v6: Dashboard chat (Crystal AI Assistant), project tools, Project Modal, Struct AI
-// ============================================================
-const DASH_QUICK_PROMPTS = [
-  { th: '📊 สรุปโครงการ', en: '📊 Summarize project', prompt: 'สรุปสถานะโครงการปัจจุบันทั้งหมด' },
-  { th: '📝 ช่วยเขียน Report', en: '📝 Help write report', prompt: 'ช่วยเขียนรายงานประจำสัปดาห์' },
-  { th: '🏗 วิเคราะห์ผล', en: '🏗 Analyze structure', prompt: 'อธิบายผลการวิเคราะห์โครงสร้าง' },
-  { th: '💰 คำนวณ BOQ', en: '💰 Calculate BOQ', prompt: 'ช่วยตรวจสอบปริมาณงานใน BOQ' },
-];
-let dashChatHistory = [];
-
-function renderDashQuickBtns() {
-  const wrap = document.getElementById('dashQuickBtns');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  DASH_QUICK_PROMPTS.forEach(q => {
-    const b = document.createElement('button');
-    b.className = 'qbtn';
-    b.textContent = currentLang === 'en' ? q.en : q.th;
-    b.onclick = () => {
-      const inp = document.getElementById('dashChatInput');
-      inp.value = q.prompt; sendDashChat();
-    };
-    wrap.appendChild(b);
-  });
-}
-function renderDashboardWelcome() {
-  const wrap = document.getElementById('dashChatMessages');
-  if (!wrap || wrap.dataset.welcomed) return;
-  wrap.dataset.welcomed = '1';
-  appendDashMsg('ai', currentLang === 'en'
-    ? 'Hi! I am Crystal AI. Ask me anything about your projects, reports, or structures.'
-    : 'สวัสดีครับ ผม Crystal AI พร้อมช่วยเรื่องโปรเจกต์ รายงาน BOQ หรือคำนวณโครงสร้าง');
-  renderDashQuickBtns();
-  // model tag
-  try {
-    const tag = document.getElementById('dashAiModelTag');
-    if (tag && typeof settings !== 'undefined') tag.textContent = settings.provider || 'groq';
-  } catch (e) {}
-}
-function appendDashMsg(role, text, isRawHtml) {
-  const wrap = document.getElementById('dashChatMessages');
-  if (!wrap) return;
-  const time = new Date().toLocaleTimeString(currentLang === 'en' ? 'en-US' : 'th-TH', { hour: '2-digit', minute: '2-digit' });
-  const html = isRawHtml ? text : renderMarkdown(text);
-  const name = role === 'user' ? (currentLang === 'en' ? 'You' : 'คุณ') : 'Crystal AI';
-  const avatar = role === 'user' ? '👷' : '✨';
-  const d = document.createElement('div');
-  d.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
-  d.innerHTML = `<div class="msg-avatar">${avatar}</div>
-    <div class="msg-body"><div class="msg-meta"><span class="msg-name">${name}</span><span class="msg-time">${time}</span></div>
-    <div class="msg-bubble">${html}</div></div>`;
-  wrap.appendChild(d);
-  wrap.scrollTop = wrap.scrollHeight;
-}
-function clearDashChat() {
-  dashChatHistory = [];
-  const wrap = document.getElementById('dashChatMessages');
-  if (wrap) { wrap.innerHTML = ''; delete wrap.dataset.welcomed; }
-  renderDashboardWelcome();
-}
-async function sendDashChat() {
-  const inp = document.getElementById('dashChatInput');
-  if (!inp) return;
-  const msg = inp.value.trim();
-  if (!msg) return;
-  inp.value = ''; autoResize(inp);
-  appendDashMsg('user', msg);
-  dashChatHistory.push({ role: 'user', content: msg });
-  const btn = document.getElementById('dashSendBtn');
-  if (btn) btn.disabled = true;
-  const loading = document.createElement('div');
-  loading.className = 'msg ai';
-  loading.innerHTML = `<div class="msg-avatar">✨</div><div class="msg-body"><div class="msg-bubble"><div class="dot-loader"><span></span><span></span><span></span></div></div></div>`;
-  document.getElementById('dashChatMessages').appendChild(loading);
-  try {
-    const reply = await callAPI(dashChatHistory.slice(-MAX_HISTORY));
-    loading.remove();
-    appendDashMsg('ai', reply);
-    dashChatHistory.push({ role: 'assistant', content: reply });
-  } catch (err) {
-    loading.remove();
-    appendDashMsg('ai', '❌ ' + friendlyError(err), false);
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
+// [§Dashboard Chat — Phase-4N-2: extracted to js/dashboard.js]
+// DASH_QUICK_PROMPTS, dashChatHistory, renderDashQuickBtns,
+// renderDashboardWelcome, appendDashMsg, clearDashChat, sendDashChat
 
 // [Struct subtabs + AI Vision — Phase-4L-2: extracted to js/structural.js]
 // switchDashStruct, previewStructImg, analyzeStructWithAI,
@@ -3645,13 +3467,7 @@ function scrollToCard(cardId) {
   if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// Wire dashboard chat send on Enter
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey && document.activeElement && document.activeElement.id === 'dashChatInput') {
-    e.preventDefault(); sendDashChat();
-  }
-});
-
+// [Dashboard chat Enter-key listener — Phase-4N-2: extracted to js/dashboard.js]
 // ============================================================
 // FIXED v5.1: Global error boundary — FEAT-2
 // ============================================================
