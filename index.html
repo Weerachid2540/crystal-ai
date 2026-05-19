@@ -3175,6 +3175,14 @@ function autoResize(el) {
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
+// ============================================================
+// DEAD CODE — v5 Dashboard AI block (element IDs removed in v6 redesign)
+// dashboardAiMessages / dashboardAiInput do NOT exist in the DOM.
+// v6 dashboard chat lives in dashChatMessages + sendDashChat() (line ~8255).
+// Phase-3A: renderDashboardWelcome renamed to _dead_v5_renderDashboardWelcome
+// to eliminate the JS function-declaration duplicate. DO NOT re-wire to HTML.
+// ============================================================
+
 function dashboardOverviewContext() {
   const projects = (allProjects || []).slice(0, 12).map((p, idx) => {
     const code = p.code || p.id || `P${idx + 1}`;
@@ -3186,7 +3194,7 @@ function dashboardOverviewContext() {
   return `Dashboard overview context:\n${projects}\n\nตอบในฐานะ AI Assistant หน้าหลักของ Crystal Engineering ช่วยสรุปภาพรวม จัดลำดับความสำคัญ และแนะนำ next action ระดับบริษัท ไม่สร้าง Reports แทน project module.`;
 }
 
-function renderDashboardWelcome() {
+function _dead_v5_renderDashboardWelcome() {
   const wrap = document.getElementById('dashboardAiMessages');
   if (!wrap || dashboardChatHistory.length) return;
   const time = new Date().toLocaleTimeString(currentLang === 'en' ? 'en-US' : 'th-TH', { hour: '2-digit', minute: '2-digit' });
@@ -3217,7 +3225,7 @@ function appendDashboardMsg(role, name, text, isRawHtml) {
 
 function clearDashboardAI() {
   dashboardChatHistory = [];
-  renderDashboardWelcome();
+  _dead_v5_renderDashboardWelcome();
 }
 
 function dashboardQuickPrompt(text) {
@@ -7875,6 +7883,9 @@ function calcProjectProgress(p) {
   };
 }
 
+// Phase-3A NOTE: This no-arg openProjectModal() is overridden (shadowed) by the
+// openProjectModal(projectId) declaration further below. That version handles both
+// cases: no-arg → openCreateProject(), with id → open project detail modal.
 function openProjectModal() {
   fillFormMap({
     projModalId:'', projModalCode:'', projModalName:'',
@@ -8677,6 +8688,9 @@ function openCreateProject() {
   openModal('projectModal');
 }
 // Override closeProjectModal so both close the add/edit AND the detail modal safely.
+// NOTE (Phase-3A): _origCloseProjectModal cannot capture the v1 declaration —
+// function hoisting means both declarations are resolved before this line runs,
+// and the last declaration (below) already wins. Variable is unused; kept for history.
 const _origCloseProjectModal = (typeof closeProjectModal === 'function') ? closeProjectModal : null;
 function closeProjectModal() {
   closeModal('projectModal');
