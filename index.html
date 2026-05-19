@@ -34,6 +34,7 @@
 <script src="js/export-weekly.js"></script>
 <script src="js/salary.js"></script>
 <script src="js/structural.js"></script>
+<script src="js/project-events.js"></script>
 <style>
   :root {
     /* === v5 Color System === */
@@ -3687,70 +3688,9 @@ async function safeApiCall(fn, errorMsg) {
   }
 }
 
-// ============================================================
-// 12B. PROJECT CONTEXT EVENT SYSTEM (Phase-3B)
-// ============================================================
-const PROJECT_EVENT_DEBUG = false;
-
-function _pEvtLog(...args) {
-  if (PROJECT_EVENT_DEBUG) console.log('[ProjectEvent]', ...args);
-}
-
-function emitProjectOpen(meta, source) {
-  _pEvtLog('OPEN', meta?.id, '←', source);
-  window.dispatchEvent(new CustomEvent('crystalProjectOpen', {
-    detail: { id: meta?.id ?? null, meta: meta ?? null, source, timestamp: Date.now() }
-  }));
-}
-
-function emitProjectClose(source) {
-  _pEvtLog('CLOSE', '←', source);
-  window.dispatchEvent(new CustomEvent('crystalProjectClose', {
-    detail: { id: null, meta: null, source, timestamp: Date.now() }
-  }));
-}
-
-function emitProjectChanged(meta, source) {
-  _pEvtLog('CHANGED', meta?.id, '←', source);
-  window.dispatchEvent(new CustomEvent('crystalProjectChanged', {
-    detail: { id: meta?.id ?? null, meta: meta ?? null, source, timestamp: Date.now() }
-  }));
-}
-
-function _bindProjectEvents() {
-  if (window.__crystalProjectEventsBound) return;
-  window.__crystalProjectEventsBound = true;
-
-  window.addEventListener('crystalProjectOpen', (e) => {
-    _pEvtLog('→ loading modules for project', e.detail.id);
-    try { _resetDailyPhotosMemory(); loadDailyPhotos(); _pEvtLog('LOAD daily-photos OK'); }
-    catch(err) { console.warn('[ProjectEvent] daily-photos:', err.message); }
-    try { loadBOQ(); _pEvtLog('LOAD boq OK'); }
-    catch(err) { console.warn('[ProjectEvent] boq:', err.message); }
-    try { loadReportTables(); loadDrafts(); _pEvtLog('LOAD reports+drafts OK'); }
-    catch(err) { console.warn('[ProjectEvent] reports:', err.message); }
-    try { loadWkPhotos(); _pEvtLog('LOAD wk-photos OK'); }
-    catch(err) { console.warn('[ProjectEvent] wk-photos:', err.message); }
-    try { chatHistory = []; if (!loadChatHistory()) renderWelcome(); _pEvtLog('LOAD chat OK'); }
-    catch(err) { console.warn('[ProjectEvent] chat:', err.message); }
-    try {
-      populateStructProjectPicker();
-      const hp = document.getElementById('structHistoryPanel');
-      if (hp && hp.style.display !== 'none') renderStructHistory();
-      _pEvtLog('LOAD struct-picker OK');
-    } catch(err) { console.warn('[ProjectEvent] struct-picker:', err.message); }
-  });
-
-  window.addEventListener('crystalProjectClose', () => {
-    _pEvtLog('→ clearing project UI');
-    try { clearDailyPhotos(); _pEvtLog('CLEAR daily-photos OK'); }
-    catch(err) { console.warn('[ProjectEvent] clear daily-photos:', err.message); }
-  });
-
-  window.addEventListener('crystalProjectChanged', (e) => {
-    _pEvtLog('→ project switched to', e.detail.id, '(modules loading via crystalProjectOpen)');
-  });
-}
+// [§12B PROJECT CONTEXT EVENT SYSTEM — Phase-4M-2: extracted to js/project-events.js]
+// PROJECT_EVENT_DEBUG, _pEvtLog, emitProjectOpen/Close/Changed, _bindProjectEvents
+// (Phase-3B pub/sub infrastructure)
 
 // ============================================================
 // 13. INIT
