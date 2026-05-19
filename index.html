@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!-- Crystal AI — Phase 1: Auth (Supabase) + Projects + Dashboard -->
 <html lang="th">
 <head>
@@ -14,6 +14,10 @@
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<!-- Phase-4C: extracted utility modules (non-module scripts — global scope) -->
+<script src="js/utils.js"></script>
+<script src="js/markdown.js"></script>
+<script src="js/toast.js"></script>
 <style>
   :root {
     /* === v5 Color System === */
@@ -2517,89 +2521,11 @@
 'use strict';
 
 // ============================================================
-// 0. CORE UTILITIES (FIXED #1, #2, #4, #6)
+// 0. CORE UTILITIES — Phase-4C: extracted to js/utils.js
+// safeJsonParse, deepClone, getEl, getValue, setValue,
+// fillFormMap, clearFormFields, openModal, closeModal,
+// toggleModal, localDate, localDateTime, escapeHtml
 // ============================================================
-
-// FIXED #1: ป้องกัน crash จาก localStorage corrupt
-function safeJsonParse(str, fallback) {
-  if (str === null || str === undefined || str === '') return fallback;
-  try {
-    const v = JSON.parse(str);
-    return v === null ? fallback : v;
-  } catch (e) {
-    console.warn('[Crystal] safeJsonParse failed:', e.message);
-    return fallback;
-  }
-}
-
-// Phase-1B: Deep clone helper — ป้องกัน crash ถ้า object มีค่าแปลก
-function deepClone(obj) {
-  try { return JSON.parse(JSON.stringify(obj)); } catch (e) {
-    console.warn('[Crystal] deepClone failed, returning original:', e.message);
-    return obj;
-  }
-}
-
-// Phase-1B: Safe DOM helpers — ป้องกัน null access
-function getEl(id) { return document.getElementById(id); }
-function getValue(id, fallback = '') {
-  const el = document.getElementById(id);
-  return el ? el.value : fallback;
-}
-function setValue(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.value = value;
-}
-
-// Phase-1D: Form helpers — ลด getElementById().value pattern ซ้ำ
-function fillFormMap(map) {
-  Object.entries(map).forEach(([id, val]) => setValue(id, val));
-}
-function clearFormFields(ids) {
-  ids.forEach(id => setValue(id, ''));
-}
-
-// Phase-1C: Centralized modal helpers — ลด .classList.add/remove('show') ซ้ำ
-function openModal(id) {
-  const el = document.getElementById(id);
-  if (!el) { console.warn('[Crystal] openModal: not found —', id); return; }
-  el.classList.add('show');
-}
-function closeModal(id) {
-  const el = document.getElementById(id);
-  if (!el) { console.warn('[Crystal] closeModal: not found —', id); return; }
-  el.classList.remove('show');
-}
-function toggleModal(id, show) {
-  const el = document.getElementById(id);
-  if (!el) { console.warn('[Crystal] toggleModal: not found —', id); return; }
-  el.classList.toggle('show', show);
-}
-
-// FIXED #2: คืนวันที่แบบ local timezone — ไม่ใช้ toISOString() ที่เป็น UTC
-// FIXED v5.1: accept Date/string/number inputs without falling back to today — BUG-6
-function localDate(date) {
-  const d = date == null ? new Date() : new Date(date);
-  if (isNaN(d.getTime())) return '';
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-// FIXED v5.1: local date-time helper for draft metadata — BUG-6 / FEAT-1
-function localDateTime(date) {
-  const d = date == null ? new Date() : new Date(date);
-  if (isNaN(d.getTime())) return '';
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mm = String(d.getMinutes()).padStart(2, '0');
-  return `${localDate(d)} ${hh}:${mm}`;
-}
-
-// XSS-safe HTML escape
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
 
 // ============================================================
 // 1. i18n SYSTEM (3 modes: mix / th / en)
@@ -3075,92 +3001,9 @@ async function callAPI(messages, opts = {}) {
   }
 }
 
-// FIXED #23: detect "prepayment credits depleted" + better error categorization
-function friendlyError(err) {
-  const msg = err.message || String(err);
-  if (msg === 'NO_API_KEY') return escapeHtml(tr('no_key'));
-  if (msg === 'REQUEST_BUSY') return escapeHtml(tr('busy'));
-  if (msg === 'TIMEOUT') return '⏱ Request timeout — กรุณาลองใหม่';
-  if (msg.startsWith('AUTH_FAILED')) return '🔐 API Key ไม่ถูกต้อง — ' + escapeHtml(msg.replace('AUTH_FAILED: ', ''));
-  if (msg.startsWith('PAYMENT_REQUIRED') || /prepayment.*deplet|insufficient.*credit|insufficient.*balance/i.test(msg)) {
-    const detail = msg.replace(/^PAYMENT_REQUIRED:\s*/, '').replace(/^RATE_LIMIT:\s*/, '');
-    return `💳 <strong>เครดิตหมด / ต้องเติมเงิน</strong><br><br>` +
-           `<code style="font-size:11px;display:block;background:rgba(0,0,0,0.3);padding:8px;border-radius:5px;white-space:pre-wrap">${escapeHtml(detail)}</code><br>` +
-           `<strong>วิธีแก้:</strong><br>` +
-           `1. <strong>เปลี่ยนไปใช้ Groq</strong> (ฟรีจริง) — กด ⚙ → Provider → Groq<br>` +
-           `2. หรือใช้ <strong>Google account อื่น</strong> สร้าง API Key ใหม่<br>` +
-           `3. หรือเติมเงินที่ <a href="https://ai.studio/projects" target="_blank" style="color:var(--accent)">ai.studio/projects</a>`;
-  }
-  if (msg.startsWith('RATE_LIMIT')) {
-    const detail = msg.replace('RATE_LIMIT: ', '');
-    const isZeroLimit = /limit:\s*0/i.test(detail);
-    let advice;
-    if (isZeroLimit) {
-      advice = `<strong>⚠️ บัญชี Google ของคุณไม่มี Free Tier เปิดใช้</strong> (limit: 0)<br><br>` +
-               `<strong>วิธีแก้:</strong><br>` +
-               `1. <strong>เปลี่ยนไปใช้ Groq</strong> (ฟรีจริง) — กด ⚙ → Provider → Groq<br>` +
-               `2. หรือสร้าง API Key ใน Project ใหม่ที่ <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com</a> (เลือก "Create API key in new project")<br>` +
-               `3. หรือ Enable <strong>Generative Language API</strong> ใน <a href="https://console.cloud.google.com/apis/api/generativelanguage.googleapis.com" target="_blank" style="color:var(--accent)">Cloud Console</a>`;
-    } else {
-      advice = `<strong>วิธีแก้:</strong><br>` +
-               `1. กด ⚙ → เปลี่ยน Model เป็น <code>gemini-2.0-flash</code><br>` +
-               `2. รอ 1 นาที แล้วลองใหม่<br>` +
-               `3. ถ้ายังไม่ได้ = quota รายวันหมด → รอบ่าย 2-3 โมง (รีเซ็ตเที่ยงคืน Pacific)<br>` +
-               `4. หรือเปลี่ยนไปใช้ <strong>Groq</strong> (ฟรี และเร็ว)`;
-    }
-    return `⚠️ <strong>Rate Limit / Quota Error</strong><br><br>` +
-           `<code style="font-size:11px;display:block;background:rgba(0,0,0,0.3);padding:8px;border-radius:5px;white-space:pre-wrap">${escapeHtml(detail)}</code><br>` +
-           advice;
-  }
-  if (msg === 'EMPTY_RESPONSE') return '❌ AI ไม่ตอบกลับ — กรุณาลองใหม่';
-  if (msg.startsWith('API_ERROR')) return '❌ ' + escapeHtml(msg.replace('API_ERROR: ', ''));
-  if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) return '🌐 เชื่อมต่อ Internet ไม่ได้';
-  return '❌ ' + escapeHtml(msg);
-}
+// Phase-4C: friendlyError → extracted to js/utils.js
+// Phase-4C: renderMarkdown → extracted to js/markdown.js
 
-// ============================================================
-// 4. XSS-SAFE MARKDOWN (FIXED #3: bullet list grouping)
-// ============================================================
-function renderMarkdown(text) {
-  let html = escapeHtml(text);
-
-  // Code blocks ```...``` (preserve before other patterns)
-  const codeBlocks = [];
-  html = html.replace(/```([\s\S]*?)```/g, (_, c) => {
-    codeBlocks.push(c.trim());
-    return `CB${codeBlocks.length - 1}`;
-  });
-
-  // Inline patterns
-  html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-  html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
-
-  // FIXED #3: Process bullet lists line-by-line, group consecutive items into single <ul>
-  const lines = html.split('\n');
-  const out = [];
-  let inList = false;
-  for (const line of lines) {
-    const m = line.match(/^\s*[-*•]\s+(.+)$/);
-    if (m) {
-      if (!inList) { out.push('<ul>'); inList = true; }
-      out.push('<li>' + m[1] + '</li>');
-    } else {
-      if (inList) { out.push('</ul>'); inList = false; }
-      out.push(line);
-    }
-  }
-  if (inList) out.push('</ul>');
-
-  // Join → convert remaining \n to <br>, then cleanup
-  let result = out.join('\n').replace(/\n/g, '<br>');
-  result = result.replace(/<br>\s*<ul>/g, '<ul>').replace(/<\/ul>\s*<br>/g, '</ul>');
-  result = result.replace(/<\/li><br>/g, '</li>').replace(/<ul><br>/g, '<ul>');
-
-  // Restore code blocks
-  result = result.replace(/CB(\d+)/g, (_, i) => `<pre><code>${codeBlocks[i]}</code></pre>`);
-  return result;
-}
 
 // ============================================================
 // 5. CHAT (FIXED #12: persist + load + Ctrl+Enter)
@@ -3467,7 +3310,7 @@ function clearChat() {
 // ============================================================
 // 6. FORM VALIDATION + GENERATORS (FIXED #7: auto-clear error)
 // ============================================================
-function val(id) { return document.getElementById(id)?.value.trim() || ''; }
+// Phase-4C: val() → extracted to js/utils.js
 
 function validateForm(panelId) {
   const panel = document.getElementById(panelId);
@@ -5485,42 +5328,8 @@ function setupKeyboardShortcuts() {
 }
 
 // ============================================================
-// 12. TOAST QUEUE (FIXED #20)
-// ============================================================
-const MAX_TOASTS = 3;
-const TOAST_DURATION = 3000;
-let activeToasts = [];
-
-function toast(message, type) {
-  const messageStr = String(message);
-  // Dedupe: ถ้ามีข้อความเดียวกันอยู่แล้ว ข้ามไป
-  if (activeToasts.find(x => x.message === messageStr)) return;
-  // Limit: ถ้าเกิน MAX → ลบเก่าสุด
-  while (activeToasts.length >= MAX_TOASTS) {
-    const oldest = activeToasts.shift();
-    if (oldest.el && oldest.el.parentNode) oldest.el.parentNode.removeChild(oldest.el);
-    if (oldest.timer1) clearTimeout(oldest.timer1);
-    if (oldest.timer2) clearTimeout(oldest.timer2);
-  }
-  const c = document.getElementById('toastContainer');
-  const el = document.createElement('div');
-  el.className = 'toast' + (type ? ' ' + type : '');
-  // Toast supports basic HTML for rich error messages from friendlyError
-  el.innerHTML = messageStr;
-  c.appendChild(el);
-  const entry = { message: messageStr, el };
-  activeToasts.push(entry);
-  entry.timer1 = setTimeout(() => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateX(20px)';
-    el.style.transition = 'all 0.3s';
-  }, TOAST_DURATION);
-  entry.timer2 = setTimeout(() => {
-    if (el.parentNode) el.remove();
-    activeToasts = activeToasts.filter(x => x !== entry);
-  }, TOAST_DURATION + 400);
-}
-
+// 12. TOAST QUEUE — Phase-4C: extracted to js/toast.js
+// MAX_TOASTS, TOAST_DURATION, activeToasts, toast()
 // ============================================================
 // 12.3 STRUCTURAL ANALYSIS (Beam/Column/Slab/Footing) + Q&A
 // Standards (verified in spec, latest enacted):
@@ -7641,14 +7450,7 @@ function syncAppState(view) {
   appState.currentProjectId = view === 'project' ? (currentProjectId || null) : null;
 }
 
-function requireProjectContext(moduleName) {
-  if (currentView !== 'project' || !currentProjectId) {
-    toast((moduleName || 'This module') + ' ต้องเปิดจากภายในโปรเจกต์เท่านั้น', 'error');
-    goView('dashboard');
-    return false;
-  }
-  return true;
-}
+// Phase-4C: requireProjectContext() → extracted to js/utils.js
 
 function updateProjectContextUI() {
   const p = currentProjectMeta;
