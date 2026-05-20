@@ -136,9 +136,12 @@ function friendlyError(err) {
 
 // §12.5 helper — gate modules to project context
 // Runtime deps: currentView, currentProjectId, goView() from inline script; toast() from toast.js
+// FIXED regression: also close tool modal before redirecting so user isn't left
+// with an open modal whose panel context is stale.
 function requireProjectContext(moduleName) {
   if (currentView !== 'project' || !currentProjectId) {
     toast((moduleName || 'This module') + ' ต้องเปิดจากภายในโปรเจกต์เท่านั้น', 'error');
+    try { if (typeof closeToolModal === 'function') closeToolModal(); } catch (e) {}
     goView('dashboard');
     return false;
   }

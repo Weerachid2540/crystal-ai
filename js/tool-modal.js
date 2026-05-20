@@ -69,3 +69,24 @@ function closeToolModal() {
   closeModal('toolModal');
   closeToolModalReturn();
 }
+
+// ---- Print fix: panel lives inside .modal-overlay which print CSS hides ----
+// Before printing: temporarily restore panel to its original DOM location so
+// @media print can see it. After printing: move it back into the tool modal.
+window.addEventListener('beforeprint', function() {
+  if (!_activeToolPanel) return;
+  const { panel, parent, next } = _activeToolPanel;
+  panel._printRestored = true;
+  if (next && next.parentNode === parent) parent.insertBefore(panel, next);
+  else parent.appendChild(panel);
+  const overlay = document.getElementById('toolModal');
+  if (overlay) overlay.style.visibility = 'hidden';
+});
+window.addEventListener('afterprint', function() {
+  if (!_activeToolPanel || !_activeToolPanel.panel._printRestored) return;
+  const body = document.getElementById('toolModalBody');
+  if (body) body.appendChild(_activeToolPanel.panel);
+  delete _activeToolPanel.panel._printRestored;
+  const overlay = document.getElementById('toolModal');
+  if (overlay) overlay.style.visibility = '';
+});
