@@ -259,3 +259,51 @@ ${_formatTargetRows(moTargets)}
 Output a polished monthly report with: an Executive Summary at the top, bolded section headings, bullet points where useful, a Plan-vs-Actual variance analysis with brief commentary, and a concluding outlook for the next month.`;
   runGenerator({ panelId: 'panel-monthly', loadId: 'loadingMonthly', btnId: 'genMonthlyBtn', areaId: 'resultMonthly', textId: 'resultMonthlyText', prompt });
 }
+
+// ============================================================
+// [§ clearForm — Phase-4Q-2: extracted from inline script]
+// Deps: tr(i18n), boqRows/addBOQRow(boq), clearDailyPhotos/
+//   setupWeekly/clearSignatureGroup(photos/signatures),
+//   wk*/mo*/render*(report-tables), localDate(utils), toast
+// ============================================================
+// FIXED #19: Clear Form per panel
+function clearForm(panelId) {
+  if (!confirm(tr('confirm_clear_form'))) return;
+  const panel = document.getElementById(panelId);
+  panel.querySelectorAll('input, select, textarea').forEach(el => {
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else if (el.type !== 'button') el.value = '';
+  });
+  // Reset BOQ table if applicable
+  if (panelId === 'panel-proc') {
+    boqRows = [];
+    addBOQRow();
+  }
+  // Clear photos for daily report
+  if (panelId === 'panel-report') {
+    clearDailyPhotos();
+    clearSignatureGroup(['sigDailyApprover']);
+  }
+  // Clear weekly tables + signatures
+  if (panelId === 'panel-weekly') {
+    wkAct = []; wkIssue = []; wkNext = []; wkTargets = [];
+    localStorage.removeItem('crystal_wk_tables');
+    renderWkAct(); renderWkIssue(); renderWkNext(); renderWkTarget();
+    clearSignatureGroup(['sigWkApprover']);
+  }
+  // Clear monthly tables + signatures
+  if (panelId === 'panel-monthly') {
+    moAct = []; moIssue = []; moNext = []; moTargets = [];
+    localStorage.removeItem('crystal_mo_tables');
+    renderMoAct(); renderMoIssue(); renderMoNext(); renderMoTarget();
+    clearSignatureGroup(['sigMoApprover']);
+  }
+  // Reset default date
+  const today = localDate();
+  ['rpt_date', 'boq_date', 'vo_date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && panel.contains(el)) el.value = today;
+  });
+  localStorage.removeItem('crystal_draft_' + panelId);
+  toast(currentLang === 'en' ? '✓ Form cleared' : '✓ ล้างฟอร์มแล้ว', 'success');
+}

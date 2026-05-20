@@ -144,3 +144,31 @@ function requireProjectContext(moduleName) {
   }
   return true;
 }
+
+// ============================================================
+// [§ Global Error Boundary — Phase-4Q-3: extracted from inline script]
+// FIXED v5.1: Global error boundary — FEAT-2
+// Deps: toast() (toast.js) — all calls wrapped in try/catch (safe at parse time)
+// NOTE: safeApiCall() removed — confirmed 0 callers (Phase-4Q-1 audit)
+// ============================================================
+window.onerror = function(msg, src, line, col, err) {
+  console.error('[Crystal AI Error]', msg, err);
+  if (typeof msg === 'string' && msg.includes('ResizeObserver')) return false;
+  try { toast('❌ เกิดข้อผิดพลาด: ' + String(msg).slice(0, 80), 'error'); } catch (e) {}
+  return false;
+};
+window.onunhandledrejection = function(event) {
+  const msg = (event && event.reason && event.reason.message) || String(event && event.reason);
+  console.error('[Crystal AI Promise Error]', msg);
+  try {
+    if (/Failed to fetch|NetworkError/i.test(msg)) {
+      toast('🌐 เน็ตหลุด กรุณาตรวจสอบการเชื่อมต่อ', 'error');
+    } else if (/401|Invalid API key/i.test(msg)) {
+      toast('🔑 API Key ไม่ถูกต้อง ตรวจสอบใน Settings', 'error');
+    } else if (/429|Rate limit/i.test(msg)) {
+      toast('⏱️ ส่งคำขอถี่เกินไป กรุณารอสักครู่', 'error');
+    } else {
+      toast('❌ ' + String(msg).slice(0, 100), 'error');
+    }
+  } catch (e) {}
+};
