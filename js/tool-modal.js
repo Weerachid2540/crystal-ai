@@ -70,23 +70,30 @@ function closeToolModal() {
   closeToolModalReturn();
 }
 
-// ---- Print fix: panel lives inside .modal-overlay which print CSS hides ----
-// Before printing: temporarily restore panel to its original DOM location so
-// @media print can see it. After printing: move it back into the tool modal.
+// ---- Print fix v2: .main { display:none !important } in v6 CSS, so restoring
+// the panel to its original parent (inside .main) still hides it in print.
+// Solution: move the panel directly onto <body> (outside .main) so the
+// existing @media print rule ".panel.active { display:block !important }" works.
+// A temporary <div id="_crystalPrintHost"> is created and removed each cycle.
 window.addEventListener('beforeprint', function() {
   if (!_activeToolPanel) return;
-  const { panel, parent, next } = _activeToolPanel;
+  const { panel } = _activeToolPanel;
   panel._printRestored = true;
-  if (next && next.parentNode === parent) parent.insertBefore(panel, next);
-  else parent.appendChild(panel);
+  // Create a body-level host not subject to .main { display:none !important }
+  const host = document.createElement('div');
+  host.id = '_crystalPrintHost';
+  document.body.appendChild(host);
+  host.appendChild(panel);
   const overlay = document.getElementById('toolModal');
   if (overlay) overlay.style.visibility = 'hidden';
 });
 window.addEventListener('afterprint', function() {
   if (!_activeToolPanel || !_activeToolPanel.panel._printRestored) return;
-  const body = document.getElementById('toolModalBody');
-  if (body) body.appendChild(_activeToolPanel.panel);
+  const modalBody = document.getElementById('toolModalBody');
+  if (modalBody) modalBody.appendChild(_activeToolPanel.panel);
   delete _activeToolPanel.panel._printRestored;
   const overlay = document.getElementById('toolModal');
   if (overlay) overlay.style.visibility = '';
+  const host = document.getElementById('_crystalPrintHost');
+  if (host) host.remove();
 });
