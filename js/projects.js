@@ -125,6 +125,7 @@ function openProjectModal(projectId) {
   if (projectId === undefined) { return openCreateProject(); }
   currentProjectId = projectId;
   currentProjectMeta = (allProjects || []).find(p => p.id === projectId) || null;
+  setView('project');  // BUG-1 FIX: currentView must be 'project' for requireProjectContext
   const m = currentProjectMeta || {};
 
   // Header
@@ -313,6 +314,7 @@ function closeProjectModalDetail() {
   emitProjectClose('closeProjectModalDetail');  // Phase-3B
   closeModal('projectDetailModal');
   currentProjectId = null; currentProjectMeta = null;
+  setView('dashboard');  // BUG-1 FIX: restore currentView when leaving project
 }
 function switchProjTab(tab, btn) {
   // stub — kept for legacy compatibility
