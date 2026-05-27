@@ -54,9 +54,25 @@ function saveDraft(panelId) {
 function loadDrafts() {
   let any = false;
   DRAFT_PANELS.forEach(pid => {
+    const panel = document.getElementById(pid);
+    if (!panel) return;
+    // Clear all input/select/textarea values first to avoid leaking previous project data
+    panel.querySelectorAll('input, select, textarea').forEach(el => {
+      if (el.tagName !== 'BUTTON' && el.type !== 'file') {
+        el.value = '';
+      }
+    });
+    // Restore draft if it exists
     const draft = safeJsonParse(localStorage.getItem('crystal_draft_' + pid), null);
     const data = draft && draft.data ? draft.data : draft;
     if (data && restorePanelData(pid, data)) any = true;
+    // Restore defaults for date fields if still empty after draft restore
+    ['rpt_date', 'boq_date', 'vo_date'].forEach(fieldId => {
+      const el = document.getElementById(fieldId);
+      if (el && el.type === 'date' && !el.value) {
+        el.value = localDate();
+      }
+    });
   });
   if (any) toast(tr('draft_loaded'), 'success');
 }

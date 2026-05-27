@@ -74,9 +74,9 @@ function _bindProjectEvents() {
   });
 
   window.addEventListener('crystalProjectClose', () => {
-    _pEvtLog('→ clearing project UI');
-    try { clearDailyPhotos(); _pEvtLog('CLEAR daily-photos OK'); }
-    catch(err) { console.warn('[ProjectEvent] clear daily-photos:', err.message); }
+    _pEvtLog('→ clearing project UI (in-memory only, stored photos preserved)');
+    try { _resetDailyPhotosMemory(); _pEvtLog('RESET daily-photos memory OK'); }
+    catch(err) { console.warn('[ProjectEvent] reset daily-photos memory:', err.message); }
   });
 
   window.addEventListener('crystalProjectChanged', (e) => {

@@ -186,6 +186,8 @@ function saveReportTablesDraft(panelId) {
 }
 
 function loadReportTables() {
+  wkAct = []; wkIssue = []; wkNext = []; wkTargets = [];
+  moAct = []; moIssue = []; moNext = []; moTargets = [];
   const wk = safeJsonParse(localStorage.getItem('crystal_wk_tables'), null);
   if (wk) {
     wkAct = wk.act || []; wkIssue = wk.issue || []; wkNext = wk.next || []; wkTargets = wk.targets || [];

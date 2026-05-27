@@ -376,7 +376,7 @@ function recalcSalaryMonth() {
       if (!ot) return;
       const sub = (ot.rate || 0) * cnt;
       otTotal += sub;
-      html += `<div class="salary-summary-row indent"><span>${escapeHtml(ot.label)} ${cnt} ${currentLang === 'en' ? 'days' : 'วัน'} × ${_fmtMoney(ot.rate)}</span><span>+${_fmtMoney(sub)}</span></div>`;
+      html += `<div class="salary-summary-row indent income"><span>${escapeHtml(ot.label)} ${cnt} ${currentLang === 'en' ? 'days' : 'วัน'} × ${_fmtMoney(ot.rate)}</span><span>+${_fmtMoney(sub)}</span></div>`;
     });
     html += `<div class="salary-summary-row income"><span style="padding-left:16px;font-weight:600">${currentLang === 'en' ? 'OT total' : 'รวม OT'}</span><span>+${_fmtMoney(otTotal)}</span></div></div>`;
     total += otTotal;
@@ -390,7 +390,7 @@ function recalcSalaryMonth() {
       if (!cnt) return;
       const sub = (s.rate || 0) * cnt;
       travelTotal += sub;
-      html += `<div class="salary-summary-row indent"><span>${escapeHtml(s.name)} ${cnt} ${currentLang === 'en' ? 'days' : 'วัน'} × ${_fmtMoney(s.rate)}</span><span>+${_fmtMoney(sub)}</span></div>`;
+      html += `<div class="salary-summary-row indent income"><span>${escapeHtml(s.name)} ${cnt} ${currentLang === 'en' ? 'days' : 'วัน'} × ${_fmtMoney(s.rate)}</span><span>+${_fmtMoney(sub)}</span></div>`;
     });
     html += `<div class="salary-summary-row income"><span style="padding-left:16px;font-weight:600">${currentLang === 'en' ? 'Travel total' : 'รวมค่าเดินทาง'}</span><span>+${_fmtMoney(travelTotal)}</span></div></div>`;
     total += travelTotal;

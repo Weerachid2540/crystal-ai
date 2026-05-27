@@ -135,7 +135,7 @@ function openProjectModal(projectId) {
 
   // Status badge
   const badge = document.getElementById('pdStatusBadge');
-  const statusMap = { active: { label: 'กำลังดำเนินการ', cls: '' }, on_hold: { label: 'หยุดชั่วคราว', cls: 'hold' }, completed: { label: 'เสร็จสิ้น', cls: 'done' } };
+  const statusMap = { active: { label: 'กำลังดำเนินการ', cls: '' }, on_hold: { label: 'หยุดชั่วคราว', cls: 'hold' }, completed: { label: 'เสร็จสิ้น', cls: 'done' }, cancelled: { label: 'ยกเลิก', cls: 'hold' } };
   const st = statusMap[m.status] || statusMap.active;
   badge.textContent = st.label;
   badge.className = 'proj-status-badge ' + st.cls;
@@ -285,8 +285,8 @@ function _drawProjectInfogfx(pct, timePct, m) {
   });
 
   // ── status badge bottom-left ──
-  const stMap = { active:'กำลังดำเนินการ', on_hold:'หยุดชั่วคราว', completed:'เสร็จสิ้น' };
-  const stCol = { active:'#34d399', on_hold:'#fbbf24', completed:'#818cf8' };
+  const stMap = { active:'กำลังดำเนินการ', on_hold:'หยุดชั่วคราว', completed:'เสร็จสิ้น', cancelled:'ยกเลิก' };
+  const stCol = { active:'#34d399', on_hold:'#fbbf24', completed:'#818cf8', cancelled:'#94a3b8' };
   const st = m && m.status; const stC = stCol[st] || '#94a3b8'; const stT = stMap[st] || '—';
   ctx.font = '600 10px sans-serif'; ctx.textAlign = 'left';
   const bw2 = ctx.measureText(stT).width + 16;
