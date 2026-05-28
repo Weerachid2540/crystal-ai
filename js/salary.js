@@ -434,9 +434,14 @@ function clearSalaryMonth() {
 
 function exportSalaryPDF() {
   if (!requireSalaryAccess()) return;
-  switchTab('salary');
+  // FIXED v6.11.6: use openTool (not switchTab) so _activeToolPanel = salary panel.
+  // switchTab only adds .active class; beforeprint needs _activeToolPanel set
+  // to know which panel to move to _crystalPrintHost. Without this, if user
+  // was previously viewing another tool (e.g. Users), that tool's panel would
+  // be moved instead of salary, printing the wrong content.
+  openTool('salary');
   setTimeout(() => {
     toast(currentLang === 'en' ? 'Tip: choose "Save as PDF" in the print dialog' : 'เคล็ดลับ: เลือก "Save as PDF" ในกล่อง Print', 'info');
     window.print();
-  }, 100);
+  }, 250);
 }

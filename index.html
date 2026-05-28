@@ -15,31 +15,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <!-- Phase-4C: extracted utility modules (non-module scripts — global scope) -->
-<script src="js/utils.js?v=6.11.5"></script>
-<script src="js/markdown.js?v=6.11.5"></script>
-<script src="js/toast.js?v=6.11.5"></script>
-<script src="js/i18n.js?v=6.11.5"></script>
-<script src="js/storage.js?v=6.11.5"></script>
-<script src="js/api.js?v=6.11.5"></script>
-<script src="js/settings-ui.js?v=6.11.5"></script>
-<script src="js/reset.js?v=6.11.5"></script>
-<script src="js/sidebar.js?v=6.11.5"></script>
-<script src="js/drafts.js?v=6.11.5"></script>
-<script src="js/boq.js?v=6.11.5"></script>
-<script src="js/chat.js?v=6.11.5"></script>
-<script src="js/forms.js?v=6.11.5"></script>
-<script src="js/photos.js?v=6.11.5"></script>
-<script src="js/report-tables.js?v=6.11.5"></script>
-<script src="js/signatures.js?v=6.11.5"></script>
-<script src="js/export-weekly.js?v=6.11.5"></script>
-<script src="js/salary.js?v=6.11.5"></script>
-<script src="js/structural.js?v=6.11.5"></script>
-<script src="js/project-events.js?v=6.11.5"></script>
-<script src="js/dashboard.js?v=6.11.5"></script>
-<script src="js/tool-modal.js?v=6.11.5"></script>
-<script src="js/auth.js?v=6.11.5"></script>
-<script src="js/projects.js?v=6.11.5"></script>
-<script src="js/users.js?v=6.11.5"></script>
+<script src="js/utils.js?v=6.11.6"></script>
+<script src="js/markdown.js?v=6.11.6"></script>
+<script src="js/toast.js?v=6.11.6"></script>
+<script src="js/i18n.js?v=6.11.6"></script>
+<script src="js/storage.js?v=6.11.6"></script>
+<script src="js/api.js?v=6.11.6"></script>
+<script src="js/settings-ui.js?v=6.11.6"></script>
+<script src="js/reset.js?v=6.11.6"></script>
+<script src="js/sidebar.js?v=6.11.6"></script>
+<script src="js/drafts.js?v=6.11.6"></script>
+<script src="js/boq.js?v=6.11.6"></script>
+<script src="js/chat.js?v=6.11.6"></script>
+<script src="js/forms.js?v=6.11.6"></script>
+<script src="js/photos.js?v=6.11.6"></script>
+<script src="js/report-tables.js?v=6.11.6"></script>
+<script src="js/signatures.js?v=6.11.6"></script>
+<script src="js/export-weekly.js?v=6.11.6"></script>
+<script src="js/salary.js?v=6.11.6"></script>
+<script src="js/structural.js?v=6.11.6"></script>
+<script src="js/project-events.js?v=6.11.6"></script>
+<script src="js/dashboard.js?v=6.11.6"></script>
+<script src="js/tool-modal.js?v=6.11.6"></script>
+<script src="js/auth.js?v=6.11.6"></script>
+<script src="js/projects.js?v=6.11.6"></script>
+<script src="js/users.js?v=6.11.6"></script>
 <style>
   :root {
     /* === v5 Color System === */
@@ -424,6 +424,7 @@
 
   /* IMPROVED #22: Print stylesheet — ซ่อน UI chrome เหลือเฉพาะ result */
   @media print {
+    @page { margin: 14mm 16mm; }
     body { background: white; color: black; height: auto; overflow: visible; }
     .topbar, .sidebar, .sidebar-overlay, .tab-bar, .chat-header, .chat-input-area,
     .quick-btns, .modal-overlay, .toast-container, .save-indicator, .statusbar,
@@ -453,13 +454,13 @@
     #panel-salary .signature-block:has(#sigSalaryEmployee) .signature-role { color: #555; font-size: 10px; display: block; margin-top: 2px; }
     #panel-salary .signature-block:has(#sigSalaryEmployee) .signature-name { border: none !important; padding: 0 !important; font-size: 11px; text-align: center; color: #000; font-weight: 600; background: transparent !important; }
     /* Print-only company header for salary PDF */
-    .salary-print-header { display: flex !important; align-items: center; gap: 14px;
-      border-bottom: 2px solid #333; padding-bottom: 12px; margin-bottom: 14px; }
-    .salary-print-logo { width: 70px; height: 70px; object-fit: contain; flex-shrink: 0; }
+    .salary-print-header { display: flex !important; align-items: center; gap: 16px;
+      border-bottom: 2px solid #1e3a5f; padding-bottom: 14px; margin-bottom: 20px; }
+    .salary-print-logo { width: 72px; height: 72px; object-fit: cover; flex-shrink: 0; border-radius: 50%; }
     .salary-print-info { flex: 1; }
-    .salary-print-title { font-size: 18px; font-weight: 700; color: black; letter-spacing: 0.5px; }
-    .salary-print-sub { font-size: 11px; color: #666; font-family: 'IBM Plex Mono', monospace; margin-top: 2px; letter-spacing: 1px; }
-    .salary-print-period { font-size: 13px; font-weight: 600; color: #333; margin-top: 6px; }
+    .salary-print-title { font-size: 20px; font-weight: 800; color: #111; letter-spacing: 0.3px; }
+    .salary-print-sub { font-size: 11px; color: #666; font-family: 'IBM Plex Mono', monospace; margin-top: 3px; letter-spacing: 1.5px; text-transform: uppercase; }
+    .salary-print-period { font-size: 14px; font-weight: 700; color: #222; margin-top: 7px; }
     .salary-calendar { background: white; border: 1px solid #999; color: black; padding: 4px; }
     .salary-cal-weekdays > div { color: #333; }
     .salary-day { background: #fafafa; border-color: #ccc; color: black; min-height: 50px; }
@@ -468,17 +469,22 @@
     .salary-day-num { color: black; }
     .salary-day-tag { color: black !important; background: #eee !important; }
     .salary-day-ot { background: #c0392b !important; color: #fff !important; }
-    .salary-summary { background: white; border: 2px solid #333; border-radius: 8px; color: black; page-break-inside: avoid; padding: 20px; margin-bottom: 20px; }
-    .salary-summary-title { color: black; font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .salary-summary-group { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 2px dashed #999; }
-    .salary-summary-group:last-child { margin-bottom: 0; border-bottom: none; }
-    .salary-summary-grand { color: black; font-size: 18px; font-weight: 700; padding-top: 16px; border-top: 2px solid #f59e0b; margin-top: 8px; }
-    .salary-summary-row { color: black; display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 13px; }
+    .salary-summary { background: white; border: 2px solid #222; border-radius: 10px; color: black; page-break-inside: avoid; padding: 24px 28px; margin-bottom: 20px; }
+    .salary-summary-title { color: #111; font-size: 18px; font-weight: 800; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid #e8e8e8; display: flex; align-items: center; gap: 8px; letter-spacing: -0.3px; }
+    .salary-summary-group { margin-bottom: 0; padding: 14px 0; border-bottom: 2px dashed #ccc; }
+    .salary-summary-group:first-child { padding-top: 0; }
+    .salary-summary-group:last-child { border-bottom: none; padding-bottom: 4px; }
+    /* Section header row (first row in each group) — bold */
+    .salary-summary-group > .salary-summary-row:first-child > span:first-child { font-weight: 700; font-size: 14px; }
+    .salary-summary-grand { color: #111; font-size: 26px; font-weight: 800; padding-top: 22px; border-top: 3px solid #d97706; margin-top: 14px; display: flex; justify-content: space-between; align-items: baseline; letter-spacing: -0.5px; }
+    .salary-summary-grand span:first-child { font-size: 20px; font-weight: 700; }
+    .salary-summary-grand span:last-child { font-size: 28px; font-weight: 800; font-family: 'IBM Plex Mono', monospace; }
+    .salary-summary-row { color: black; display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
     .salary-summary-row.indent { padding-left: 20px; font-size: 12px; color: #555; }
     .salary-summary-row.income span:last-child { color: #16a34a; font-weight: 600; }
     .salary-summary-row.deduction span:last-child { color: #dc2626; font-weight: 600; }
     .salary-summary-row span:first-child { flex: 1; }
-    .salary-summary-row span:last-child { text-align: right; min-width: 80px; }
+    .salary-summary-row span:last-child { text-align: right; min-width: 90px; font-family: 'IBM Plex Mono', monospace; }
     .signature-block { background: white; border: 1px solid #999; color: black; page-break-inside: avoid; }
     .signature-block-title, .signature-role { color: black; }
     .signature-canvas-wrap { background: white; border: 1px solid #999; }
@@ -492,8 +498,13 @@
     .photo-thumb { cursor: default; aspect-ratio: 4/3; border: 1px solid #999; }
     .photo-thumb-num { background: rgba(0,0,0,0.6); }
     .photo-counter { display: none !important; }
-    .panel:not(.active) { display: none !important; }
-    .panel.active { display: block !important; overflow: visible !important; }
+    /* FIXED v6.11.6: only show the panel that beforeprint moved into _crystalPrintHost.
+       Previous rule (.panel.active) was too broad — could show stray panels in .main
+       whose .active class wasn't cleared, leaking wrong content onto page 1 of print. */
+    .panel { display: none !important; }
+    #_crystalPrintHost > .panel { display: block !important; overflow: visible !important; }
+    /* Hide company footer — it has no class guard and shows on first print page */
+    .company-footer { display: none !important; }
     .form-panel { padding: 0; gap: 8px; overflow: visible !important; }
     .section-card { background: white; border: 1px solid #ccc; color: black; page-break-inside: avoid; }
     .section-card-title { color: #000; }
