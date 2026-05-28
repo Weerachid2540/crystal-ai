@@ -15,31 +15,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <!-- Phase-4C: extracted utility modules (non-module scripts — global scope) -->
-<script src="js/utils.js?v=6.11.7"></script>
-<script src="js/markdown.js?v=6.11.7"></script>
-<script src="js/toast.js?v=6.11.7"></script>
-<script src="js/i18n.js?v=6.11.7"></script>
-<script src="js/storage.js?v=6.11.7"></script>
-<script src="js/api.js?v=6.11.7"></script>
-<script src="js/settings-ui.js?v=6.11.7"></script>
-<script src="js/reset.js?v=6.11.7"></script>
-<script src="js/sidebar.js?v=6.11.7"></script>
-<script src="js/drafts.js?v=6.11.7"></script>
-<script src="js/boq.js?v=6.11.7"></script>
-<script src="js/chat.js?v=6.11.7"></script>
-<script src="js/forms.js?v=6.11.7"></script>
-<script src="js/photos.js?v=6.11.7"></script>
-<script src="js/report-tables.js?v=6.11.7"></script>
-<script src="js/signatures.js?v=6.11.7"></script>
-<script src="js/export-weekly.js?v=6.11.7"></script>
-<script src="js/salary.js?v=6.11.7"></script>
-<script src="js/structural.js?v=6.11.7"></script>
-<script src="js/project-events.js?v=6.11.7"></script>
-<script src="js/dashboard.js?v=6.11.7"></script>
-<script src="js/tool-modal.js?v=6.11.7"></script>
-<script src="js/auth.js?v=6.11.7"></script>
-<script src="js/projects.js?v=6.11.7"></script>
-<script src="js/users.js?v=6.11.7"></script>
+<script src="js/utils.js?v=6.11.8"></script>
+<script src="js/markdown.js?v=6.11.8"></script>
+<script src="js/toast.js?v=6.11.8"></script>
+<script src="js/i18n.js?v=6.11.8"></script>
+<script src="js/storage.js?v=6.11.8"></script>
+<script src="js/api.js?v=6.11.8"></script>
+<script src="js/settings-ui.js?v=6.11.8"></script>
+<script src="js/reset.js?v=6.11.8"></script>
+<script src="js/sidebar.js?v=6.11.8"></script>
+<script src="js/drafts.js?v=6.11.8"></script>
+<script src="js/boq.js?v=6.11.8"></script>
+<script src="js/chat.js?v=6.11.8"></script>
+<script src="js/forms.js?v=6.11.8"></script>
+<script src="js/photos.js?v=6.11.8"></script>
+<script src="js/report-tables.js?v=6.11.8"></script>
+<script src="js/signatures.js?v=6.11.8"></script>
+<script src="js/export-weekly.js?v=6.11.8"></script>
+<script src="js/salary.js?v=6.11.8"></script>
+<script src="js/structural.js?v=6.11.8"></script>
+<script src="js/project-events.js?v=6.11.8"></script>
+<script src="js/dashboard.js?v=6.11.8"></script>
+<script src="js/tool-modal.js?v=6.11.8"></script>
+<script src="js/auth.js?v=6.11.8"></script>
+<script src="js/projects.js?v=6.11.8"></script>
+<script src="js/users.js?v=6.11.8"></script>
 <style>
   :root {
     /* === v5 Color System === */
@@ -502,9 +502,19 @@
        Previous rule (.panel.active) was too broad — could show stray panels in .main
        whose .active class wasn't cleared, leaking wrong content onto page 1 of print. */
     .panel { display: none !important; }
-    #_crystalPrintHost > .panel { display: block !important; overflow: visible !important; }
-    /* Hide company footer — it has no class guard and shows on first print page */
-    .company-footer { display: none !important; }
+    /* FIXED v6.11.8: hide ALL top-level view containers (not just .panel).
+       Must use HIGHER specificity than `body[data-view="..."] X` (which is 1,1,1)
+       because those rules sit LATER in the stylesheet and win on cascade.
+       Use `html body[data-view]` (1,1,3) to override cleanly.
+       Real-app classes are `.v6-sidebar` (not `.sidebar`), `#dashboardView`,
+       `#userMgmtView` — these were leaking onto print page 1 before this fix. */
+    html body[data-view] #dashboardView,
+    html body[data-view] #userMgmtView,
+    html body[data-view] .v6-sidebar,
+    html body[data-view] .company-footer,
+    html body .main { display: none !important; }
+    #_crystalPrintHost { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; position: static !important; }
+    #_crystalPrintHost > .panel { display: block !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box; }
     .form-panel { padding: 0; gap: 8px; overflow: visible !important; }
     .section-card { background: white; border: 1px solid #ccc; color: black; page-break-inside: avoid; }
     .section-card-title { color: #000; }
