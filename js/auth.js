@@ -82,6 +82,8 @@ async function doLogout() {
   document.getElementById('userChip').style.display = 'none';
   document.getElementById('usersBtn').style.display = 'none';
   document.getElementById('logoutBtn').style.display = 'none';
+  // FIXED: afterAuth() shows v6UsersBtn — hide it on logout too (was left visible).
+  const v6u = document.getElementById('v6UsersBtn'); if (v6u) v6u.style.display = 'none';
   document.getElementById('authPassword').value = '';
 }
 
@@ -140,8 +142,11 @@ let _authLoading = false;
 
 function clearStaleAuthTokens() {
   // FIXED v5.1: เคลียร์ token ที่ทำให้ loop — BUG-3
+  // FIXED: also clear the actual session key (storageKey: 'crystal_sb_session').
+  // It is a SHARED_KEY so removeItem() targets it unscoped — previously only the
+  // legacy sb-* keys were cleared, so a corrupt session could still loop.
   Object.keys(localStorage)
-    .filter(k => k.startsWith('sb-') || k.includes('supabase.auth'))
+    .filter(k => k.startsWith('sb-') || k.includes('supabase.auth') || k === 'crystal_sb_session')
     .forEach(k => localStorage.removeItem(k));
 }
 

@@ -171,7 +171,9 @@ async function sendDashChat() {
     dashChatHistory.push({ role: 'assistant', content: reply });
   } catch (err) {
     loading.remove();
-    appendDashMsg('ai', '❌ ' + friendlyError(err), false);
+    // FIXED: friendlyError() returns HTML — render as raw HTML (isRawHtml=true),
+    // not markdown (which escapes the tags into visible text).
+    appendDashMsg('ai', '❌ ' + friendlyError(err), true);
   } finally {
     if (btn) btn.disabled = false;
   }

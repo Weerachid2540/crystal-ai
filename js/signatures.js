@@ -18,6 +18,12 @@ function _sigStorageKey(id) { return 'crystal_sig_' + id; }
 function initSignaturePad(canvasId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  // FIXED: openTool() calls setupAllSignaturePads() on every panel open, re-running
+  // this on the SAME persistent canvas. Guard against stacking duplicate pointer/
+  // mouse/touch listeners + ResizeObserver + window-resize handlers. The observer
+  // created on first init keeps re-sizing the canvas on later opens.
+  if (canvas.__sigBound) return;
+  canvas.__sigBound = true;
   const wrap = canvas.parentElement;
   let cssWidth = 0, cssHeight = 0;     // last applied CSS size
   let initialized = false;

@@ -232,6 +232,10 @@ async function sendChat() {
       // Phase-4A: _resetDailyPhotosMemory() before loadDailyPhotos() — prevent old
       // project's photos persisting when new project has no saved photos
       try { loadBOQ(); loadReportTables(); loadDrafts(); loadWkPhotos(); loadSalary(); _resetDailyPhotosMemory(); loadDailyPhotos(); } catch(e) {}
+      // FIXED: reload chat for the new project too — without this, the previous
+      // project's chatHistory stayed in memory and got saved under the new
+      // project's scoped key, polluting/overwriting its chat.
+      try { chatHistory = []; if (!loadChatHistory()) renderWelcome(); updateChatInfo(); } catch(e) {}
       setView('project');
     }
   }
