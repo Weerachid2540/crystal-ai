@@ -5,8 +5,8 @@
 // editUser, saveUser, toggleUserActive
 // Extracted verbatim from inline script.
 // Loads after js/projects.js.
-// Depends on globals: sb, currentUser, _validateEmpId, _empIdToEmail,
-//   doLogout, toast, escapeHtml, fillFormMap, openModal, closeModal
+// Depends on globals: sb, currentUser, _validateEmpId,
+//   toast, escapeHtml, fillFormMap, openModal, closeModal
 // ============================================================
 
 // ---- USER MANAGEMENT ----
@@ -52,8 +52,9 @@ function openUserModal() {
   const pwEl    = document.getElementById('userModalPwRow');
   const pw      = document.getElementById('userModalPw');
   if (empIdEl) empIdEl.disabled = false;
-  if (pwEl)    pwEl.style.display = '';
-  if (pw)      pw.required = true;
+  // FIXED: Supabase auth signUp removed — employees is now a plain directory, no password.
+  if (pwEl)    pwEl.style.display = 'none';
+  if (pw)      pw.required = false;
   document.getElementById('userModalTitle').textContent = '👤 เพิ่มผู้ใช้';
   openModal('userModal');
 }
@@ -100,31 +101,14 @@ async function saveUser(e) {
       if (error) throw error;
       toast('แก้ไขเรียบร้อย', 'success');
     } else {
-      const pw = document.getElementById('userModalPw').value;
-      if (pw.length < 6) { toast('รหัสผ่านต้องอย่างน้อย 6 ตัว', 'error'); btn.disabled = false; return; }
-      const email = _empIdToEmail(empId);
-      // Sign up via Supabase Auth (current session stays — admin invite flow)
-      const { data: signUpData, error: signUpErr } = await sb.auth.signUp({
-        email, password: pw,
-        options: { data: { employee_id: empId } }
-      });
-      if (signUpErr) throw signUpErr;
-      const newUserId = signUpData.user?.id;
-      if (!newUserId) throw new Error('สร้าง user ไม่สำเร็จ');
+      // FIXED: no more Supabase Auth signUp (login removed) — employees is a
+      // plain directory row now, no linked auth account / password.
       const { error: empErr } = await sb.from('employees').insert({
-        user_id: newUserId, employee_id: empId, full_name: name, role,
+        employee_id: empId, full_name: name, role,
         department: dept, phone, is_active: true
       });
       if (empErr) throw empErr;
       toast('เพิ่มผู้ใช้ ' + empId + ' เรียบร้อย', 'success');
-      // signUp may have switched session — re-establish admin session
-      // (Supabase signUp logs in as new user). We need to sign back in as admin.
-      // Simpler: warn user to log in again if they were switched.
-      const { data: { user: nowUser } } = await sb.auth.getUser();
-      if (nowUser && nowUser.id !== currentUser.user_id) {
-        toast('เซสชั่นถูกเปลี่ยน — กรุณา login ใหม่', 'info');
-        setTimeout(() => doLogout(), 1500);
-      }
     }
     closeUserModal();
     await loadUsers();

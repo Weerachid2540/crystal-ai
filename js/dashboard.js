@@ -84,7 +84,6 @@ async function goView(view) {
     setView('dashboard'); await loadProjects(); renderDashboardWelcome(); return;
   }
   if (view === 'users') { setView('users'); await loadUsers(); return; }
-  if (view === 'auth')  { setView('auth'); return; }
   // v6: project / personal / structtool views removed → use dashboard
   return goView('dashboard');
 }

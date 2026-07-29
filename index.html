@@ -15,31 +15,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <!-- Phase-4C: extracted utility modules (non-module scripts — global scope) -->
-<script src="js/utils.js?v=6.11.9"></script>
-<script src="js/markdown.js?v=6.11.9"></script>
-<script src="js/toast.js?v=6.11.9"></script>
-<script src="js/i18n.js?v=6.11.9"></script>
-<script src="js/storage.js?v=6.11.9"></script>
-<script src="js/api.js?v=6.11.9"></script>
-<script src="js/settings-ui.js?v=6.11.9"></script>
-<script src="js/reset.js?v=6.11.9"></script>
-<script src="js/sidebar.js?v=6.11.9"></script>
-<script src="js/drafts.js?v=6.11.9"></script>
-<script src="js/boq.js?v=6.11.9"></script>
-<script src="js/chat.js?v=6.11.9"></script>
-<script src="js/forms.js?v=6.11.9"></script>
-<script src="js/photos.js?v=6.11.9"></script>
-<script src="js/report-tables.js?v=6.11.9"></script>
-<script src="js/signatures.js?v=6.11.9"></script>
-<script src="js/export-weekly.js?v=6.11.9"></script>
-<script src="js/salary.js?v=6.11.9"></script>
-<script src="js/structural.js?v=6.11.9"></script>
-<script src="js/project-events.js?v=6.11.9"></script>
-<script src="js/dashboard.js?v=6.11.9"></script>
-<script src="js/tool-modal.js?v=6.11.9"></script>
-<script src="js/auth.js?v=6.11.9"></script>
-<script src="js/projects.js?v=6.11.9"></script>
-<script src="js/users.js?v=6.11.9"></script>
+<script src="js/utils.js?v=6.11.10"></script>
+<script src="js/markdown.js?v=6.11.10"></script>
+<script src="js/toast.js?v=6.11.10"></script>
+<script src="js/i18n.js?v=6.11.10"></script>
+<script src="js/storage.js?v=6.11.10"></script>
+<script src="js/api.js?v=6.11.10"></script>
+<script src="js/settings-ui.js?v=6.11.10"></script>
+<script src="js/reset.js?v=6.11.10"></script>
+<script src="js/sidebar.js?v=6.11.10"></script>
+<script src="js/drafts.js?v=6.11.10"></script>
+<script src="js/boq.js?v=6.11.10"></script>
+<script src="js/chat.js?v=6.11.10"></script>
+<script src="js/forms.js?v=6.11.10"></script>
+<script src="js/photos.js?v=6.11.10"></script>
+<script src="js/report-tables.js?v=6.11.10"></script>
+<script src="js/signatures.js?v=6.11.10"></script>
+<script src="js/export-weekly.js?v=6.11.10"></script>
+<script src="js/salary.js?v=6.11.10"></script>
+<script src="js/structural.js?v=6.11.10"></script>
+<script src="js/project-events.js?v=6.11.10"></script>
+<script src="js/dashboard.js?v=6.11.10"></script>
+<script src="js/tool-modal.js?v=6.11.10"></script>
+<script src="js/auth.js?v=6.11.10"></script>
+<script src="js/projects.js?v=6.11.10"></script>
+<script src="js/users.js?v=6.11.10"></script>
 <style>
   :root {
     /* === v5 Color System === */
@@ -572,13 +572,8 @@
   /* v6: Only auth / dashboard / users views remain. .main is hidden globally;
      when a tool/project modal opens, the existing panel HTML inside .main is
      activated via switchTab() and the panel rendered inside the modal body. */
-  #authScreen, #dashboardView, #userMgmtView, .company-footer { display: none; }
+  #dashboardView, #userMgmtView, .company-footer { display: none; }
   .main { display: none !important; }
-
-  body[data-view="auth"] .topbar,
-  body[data-view="auth"] .statusbar,
-  body[data-view="auth"] .company-footer { display: none !important; }
-  body[data-view="auth"] #authScreen { display: flex !important; }
 
   body[data-view="dashboard"] #dashboardView { display: block !important; }
   body[data-view="dashboard"] .company-footer { display: block !important; }
@@ -1328,47 +1323,7 @@
 .span-inputs-row label { font-size:11px; }
 </style>
 </head>
-<body data-view="auth">
-
-<!-- ============================================================
-     AUTH SCREEN (Login)
-     ============================================================ -->
-<div class="auth-screen" id="authScreen">
-  <!-- Left: Hero panel -->
-  <div class="auth-left">
-    <div class="auth-branding">
-      <h1>🏗️ CRYSTAL AI</h1>
-      <p>ระบบจัดการโครงการก่อสร้าง<br>สำหรับทีมวิศวกร</p>
-    </div>
-  </div>
-  <!-- Right: Form panel -->
-  <div class="auth-right">
-    <div class="auth-card">
-      <div class="auth-logo">
-        <img id="authLogo" src="./logo.jpg" alt="Crystal Engineering Corporation logo">
-      </div>
-      <div class="auth-title">เข้าสู่ระบบ</div>
-      <div class="auth-company">
-        <div class="auth-company-th">บริษัท คริสตัล เอ็นจิเนียริ่ง คอร์ปอเรชั่น จำกัด</div>
-        <div>CRYSTAL ENGINEERING CORPORATION LIMITED</div>
-      </div>
-      <form class="auth-form" id="authForm" onsubmit="doLogin(event)">
-        <div class="auth-field">
-          <label for="authEmpId">รหัสพนักงาน (Employee ID)</label>
-          <input id="authEmpId" type="text" placeholder="เช่น STE-001" autocomplete="username"
-                 autocapitalize="characters" inputmode="text" maxlength="7" required>
-        </div>
-        <div class="auth-field">
-          <label for="authPassword">รหัสผ่าน</label>
-          <input id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password" required>
-        </div>
-        <div class="auth-error" id="authError"></div>
-        <button class="auth-btn" type="submit" id="authSubmit">เข้าสู่ระบบ</button>
-        <div class="auth-hint">รูปแบบรหัส: <strong>STE-XXX</strong> (เช่น STE-001)</div>
-      </form>
-    </div>
-  </div>
-</div>
+<body data-view="dashboard">
 
 <div class="topbar">
   <div class="topbar-left">
@@ -1386,12 +1341,11 @@
     <span class="crumb active" id="crumbCurrent" style="display:none"></span>
   </div>
   <div class="topbar-right">
-    <span class="user-chip" id="userChip" style="display:none">
+    <span class="user-chip" id="userChip">
       <span class="uid" id="userChipId">—</span>
       <span class="uname" id="userChipName">—</span>
     </span>
-    <button class="icon-btn" id="usersBtn" onclick="goView('users')" title="จัดการผู้ใช้" aria-label="User Management" style="display:none">👥</button>
-    <button class="icon-btn" id="logoutBtn" onclick="doLogout()" title="ออกจากระบบ" aria-label="Logout" style="display:none">🚪</button>
+    <button class="icon-btn" id="usersBtn" onclick="goView('users')" title="จัดการผู้ใช้" aria-label="User Management">👥</button>
     <div class="lang-switch" role="group" aria-label="Language">
       <button class="lang-btn active" data-lang="mix" onclick="setLang('mix')" aria-label="Mixed Thai/English">MIX</button>
       <button class="lang-btn" data-lang="th" onclick="setLang('th')" aria-label="Thai only">TH</button>
@@ -1411,7 +1365,7 @@
   <button class="v6-sb-item" onclick="scrollToCard('dashProjectsCard')" title="Projects"><span class="ico">📁</span><span>Projects</span></button>
   <button class="v6-sb-item" onclick="openStructAssistant()" title="Structural Analysis"><span class="ico">🏗</span><span>Structural Analysis</span></button>
   <button class="v6-sb-item" onclick="scrollToCard('dashAiCard')" title="AI Assistant"><span class="ico">✨</span><span>AI</span></button>
-  <button class="v6-sb-item" id="v6UsersBtn" onclick="goView('users')" title="Users" style="display:none"><span class="ico">👥</span><span>Users</span></button>
+  <button class="v6-sb-item" id="v6UsersBtn" onclick="goView('users')" title="Users"><span class="ico">👥</span><span>Users</span></button>
   <div class="v6-sb-spacer"></div>
 </nav>
 
@@ -2627,8 +2581,7 @@
 // Keep init() call order stable:
 //   1. Module UI setup (lang, salary, chat, drafts, photos, signatures, settings)
 //   2. _bindProjectEvents()      — register project context pub/sub
-//   3. _setupAuthStateListener() — register Supabase auth listener
-//   4. checkAuthOnLoad()         — LAST: async Supabase session gate
+//   3. checkAuthOnLoad()         — LAST: no login gate, boots straight into dashboard
 // ============================================================
 
 function init() {
@@ -2670,9 +2623,6 @@ function init() {
 
   _bindProjectEvents();  // Phase-3B: register project context event subscribers
 
-  // FIXED v5.1: setup auth listener before checkAuthOnLoad — BUG-3
-  _setupAuthStateListener();
-  // Gate on Supabase auth
   checkAuthOnLoad();
 }
 
